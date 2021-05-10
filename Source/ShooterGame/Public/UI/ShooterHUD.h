@@ -237,6 +237,36 @@ protected:
 	UPROPERTY()
 	FCanvasIcon PlaceIcon;
 
+	/** Radar North icon. */
+	UPROPERTY()
+	FCanvasIcon RadarNorthIcon;
+
+	/** Radar circle icon. */
+	UPROPERTY()
+	FCanvasIcon RadarCircleIcon;
+
+	/** Radar hit icon. */
+	UPROPERTY()
+	FCanvasIcon RadarHitIcon;
+
+	/** Radar enemy icon. */
+	UPROPERTY()
+	FCanvasIcon RadarEnemyIcon;
+
+	/** Radar pickup icon. */
+	UPROPERTY()
+	FCanvasIcon RadarPickupIcon;
+
+	/** Radar up icon fragment. */
+	UPROPERTY()
+	FCanvasIcon RadarUpFragment;
+
+	/** Radar down icon fragment. */
+	UPROPERTY()
+	FCanvasIcon RadarDownFragment;
+
+	/** Radar booster icon. */
+
 	/** UI scaling factor for other resolutions than Full HD. */
 	float ScaleUI;
 
@@ -273,6 +303,10 @@ protected:
 	/** Overlay shown when health is low. */
 	UPROPERTY()
 	UTexture2D* LowHealthOverlayTexture;
+
+	/** Radar texture */
+	UPROPERTY()
+	UTexture2D* HUDRadarTexture;
 
 	/** Large font - used for ammo display etc. */
 	UPROPERTY()
@@ -346,6 +380,9 @@ protected:
 
 	/** Draw death messages. */
 	void DrawDeathMessages();
+
+	/** Draw radar. */
+	void DrawRadar();
 
 	/** Delegate for telling other methods when players have started/stopped talking */
 	FOnPlayerTalkingStateChangedDelegate OnPlayerTalkingStateChangedDelegate;

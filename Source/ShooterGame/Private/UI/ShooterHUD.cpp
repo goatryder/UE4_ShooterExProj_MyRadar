@@ -33,6 +33,7 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 	static ConstructorHelpers::FObjectFinder<UTexture2D> HUDMainTextureOb(TEXT("/Game/UI/HUD/HUDMain"));
 	static ConstructorHelpers::FObjectFinder<UTexture2D> HUDAssets02TextureOb(TEXT("/Game/UI/HUD/HUDAssets02"));
 	static ConstructorHelpers::FObjectFinder<UTexture2D> LowHealthOverlayTextureOb(TEXT("/Game/UI/HUD/LowHealthOverlay"));
+	static ConstructorHelpers::FObjectFinder<UTexture2D> RadarTextureOb(TEXT("/Game/UI/HUD/Radar"));
 
 	// Fonts are not included in dedicated server builds.
 	#if !UE_SERVER
@@ -48,6 +49,7 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 	HUDMainTexture = HUDMainTextureOb.Object;
 	HUDAssets02Texture = HUDAssets02TextureOb.Object;
 	LowHealthOverlayTexture = LowHealthOverlayTextureOb.Object;
+	HUDRadarTexture = RadarTextureOb.Object;
 
 	HitNotifyIcon[EShooterHudPosition::Left] = UCanvas::MakeIcon(HitNotifyTexture,  158, 831, 585, 392);	
 	HitNotifyIcon[EShooterHudPosition::FrontLeft] = UCanvas::MakeIcon(HitNotifyTexture, 369, 434, 460, 378);	
@@ -72,6 +74,15 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 	TimerIcon = UCanvas::MakeIcon(HUDMainTexture, 381, 93, 24, 24);
 	KilledIcon = UCanvas::MakeIcon(HUDMainTexture, 425, 92, 38, 36);
 	PlaceIcon = UCanvas::MakeIcon(HUDMainTexture, 250, 468, 21, 28);
+
+	RadarNorthIcon = UCanvas::MakeIcon(HUDRadarTexture, 249, 7, 27, 14);
+	RadarCircleIcon = UCanvas::MakeIcon(HUDRadarTexture, 9, 23, 222, 222);
+	RadarHitIcon = UCanvas::MakeIcon(HUDRadarTexture, 304, 0, 22, 133);
+	RadarEnemyIcon = UCanvas::MakeIcon(HUDRadarTexture, 365, 13, 16, 16);
+	RadarPickupIcon = UCanvas::MakeIcon(HUDRadarTexture, 397, 13, 14, 14);
+	RadarUpFragment = UCanvas::MakeIcon(HUDRadarTexture, 397, 13, 14, 14);
+	RadarDownFragment = UCanvas::MakeIcon(HUDRadarTexture, 421, 17, 13, 7);
+	RadarDownFragment = UCanvas::MakeIcon(HUDRadarTexture, 445, 16, 13, 7);
 
 	Crosshair[EShooterCrosshairDirection::Left] = UCanvas::MakeIcon(HUDMainTexture, 43, 402, 25, 9); // left
 	Crosshair[EShooterCrosshairDirection::Right] = UCanvas::MakeIcon(HUDMainTexture, 88, 402, 25, 9); // right
@@ -99,7 +110,7 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 
 void AShooterHUD::BeginPlay()
 {
-	ShowRadar();
+	// ShowRadar();
 }
 
 void AShooterHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -337,6 +348,40 @@ void AShooterHUD::DrawHealth()
 	Canvas->DrawItem(TileItem);
 
 	Canvas->DrawIcon(HealthIcon,HealthPosX + Offset * ScaleUI, HealthPosY + (HealthBar.VL - HealthIcon.VL) / 2.0f * ScaleUI, ScaleUI);
+}
+
+void AShooterHUD::DrawRadar()
+{
+	/*
+	Canvas->SetDrawColor(FColor::White);
+	float KillsPosX = Canvas->OrgX + Offset * ScaleUI;
+	float KillsPosY = Canvas->OrgY + Offset * ScaleUI;
+	Canvas->DrawIcon(KillsBg, KillsPosX, KillsPosY, ScaleUI);
+
+	Canvas->DrawIcon(KillsIcon, KillsPosX + Offset * ScaleUI, KillsPosY + ((KillsBg.VL - KillsIcon.VL) / 2) * ScaleUI, ScaleUI);
+	float TextScale = 0.57f;
+	FCanvasTextItem TextItem(FVector2D::ZeroVector, FText::GetEmpty(), BigFont, HUDDark);
+	TextItem.EnableShadow(FLinearColor::Black);
+
+	float SizeX, SizeY;
+	FString Text = LOCTEXT("Kills", "KILLS:").ToString();
+	Canvas->StrLen(BigFont, Text, SizeX, SizeY);*/
+
+	Canvas->SetDrawColor(FColor::White);
+
+	const float BasicRadarPosX = Canvas->OrgX + Offset * ScaleUI;
+	const float BasicRadarPosY = Canvas->OrgY + 2.0f * Offset * ScaleUI + KillsBg.VL;  // left corner with some killcount ui element offset
+
+	const float NorthPosX = BasicRadarPosX + (RadarCircleIcon.UL - RadarNorthIcon.UL) * 0.5 * ScaleUI;  // x on center of radar
+	const float NorthPosY = BasicRadarPosY;
+
+	Canvas->DrawIcon(RadarNorthIcon, NorthPosX, NorthPosY, ScaleUI);
+
+	const float RadarNorthIconOffset = RadarNorthIcon.VL;
+	const float RadarPosX = BasicRadarPosX;
+	const float RadarPosY = NorthPosY + (RadarNorthIcon.VL + RadarNorthIconOffset) * ScaleUI;
+	
+	Canvas->DrawIcon(RadarCircleIcon, RadarPosX, RadarPosY, ScaleUI);
 }
 
 void AShooterHUD::DrawMatchTimerAndPosition()
@@ -579,6 +624,7 @@ void AShooterHUD::DrawHUD()
 		if (MyPC)
 		{
 			DrawKills();
+			DrawRadar();
 		}
 		if (MyPawn && MyPawn->IsAlive())
 		{
