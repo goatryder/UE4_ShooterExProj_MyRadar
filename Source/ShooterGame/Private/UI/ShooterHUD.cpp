@@ -4,6 +4,7 @@
 #include "UI/ShooterHUD.h"
 #include "SShooterScoreboardWidget.h"
 #include "SChatWidget.h"
+#include "RadarWidget/SRadarWidget.h"
 #include "Engine/ViewportSplitScreen.h"
 #include "Weapons/ShooterWeapon.h"
 #include "Weapons/ShooterDamageType.h"
@@ -94,6 +95,11 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 	HUDLight = FColor(175,202,213,255);
 	HUDDark = FColor(110,124,131,255);
 	ShadowedFont.bEnableShadow = true;
+}
+
+void AShooterHUD::BeginPlay()
+{
+	ShowRadar();
 }
 
 void AShooterHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -1176,6 +1182,35 @@ float AShooterHUD::DrawRecentlyKilledPlayer()
 		}
 	}
 	return LastYPos;
+}
+
+void AShooterHUD::ShowRadar()
+{
+	if (GEngine && GEngine->GameViewport)
+	{
+		RadarWidget = SNew(SRadarWidget).OwningHUD(this);
+		GEngine->GameViewport->AddViewportWidgetContent(SAssignNew(RadarWidgetContainer, SWeakWidget).PossiblyNullContent(RadarWidget.ToSharedRef()));
+
+		if (PlayerOwner)
+		{
+			PlayerOwner->bShowMouseCursor = true;
+			PlayerOwner->SetInputMode(FInputModeUIOnly());
+		}
+	}
+}
+
+void AShooterHUD::HideRadar()
+{
+	if (GEngine && GEngine->GameViewport && RadarWidgetContainer.IsValid())
+	{
+		GEngine->GameViewport->RemoveViewportWidgetContent(RadarWidgetContainer.ToSharedRef());
+
+		if (PlayerOwner)
+		{
+			PlayerOwner->bShowMouseCursor = false;
+			PlayerOwner->SetInputMode(FInputModeGameOnly());
+		}
+	}
 }
 
 #undef LOCTEXT_NAMESPACE

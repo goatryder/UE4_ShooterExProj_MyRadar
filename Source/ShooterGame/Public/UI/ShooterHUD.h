@@ -65,6 +65,8 @@ class AShooterHUD : public AHUD
 
 public:
 
+	virtual void BeginPlay() override;
+
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 	/** Main HUD update loop. */
@@ -86,7 +88,7 @@ public:
 	void NotifyEnemyHit();
 
 	/** 
-	 * Set state of current match.
+	 * Set state of current mfatch.
 	 *
 	 * @param	NewState	The new match state.
 	 */
@@ -143,6 +145,9 @@ public:
 
 	/* Is the match over (IE Is the state Won or Lost). */
 	bool IsMatchOver() const;
+
+	void ShowRadar();
+	void HideRadar();
 		
 protected:
 	/** Floor for automatic hud scaling. */
@@ -303,6 +308,10 @@ protected:
 
 	/** Chatbox widget. */
 	TSharedPtr<class SChatWidget> ChatWidget;
+
+	/** Radar widget. */
+	TSharedPtr<class SRadarWidget> RadarWidget;
+	TSharedPtr<class SWidget> RadarWidgetContainer;
 
 	/** Array of information strings to render (Waiting to respawn etc) */
 	TArray<FCanvasTextItem> InfoItems;
