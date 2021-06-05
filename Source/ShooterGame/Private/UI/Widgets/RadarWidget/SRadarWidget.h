@@ -5,6 +5,17 @@
 #include "SlateBasics.h"
 #include "SlateExtras.h"
 
+struct FRadarPoint
+{
+	bool bCanShow = false;
+	TWeakObjectPtr<class AActor> Actor = nullptr;
+	FVector LastPos = FVector::ZeroVector;
+	float ShowTime = 0.0f;
+
+	/** If 0.0, permanent if state not changes */
+	float ShowTimeMax = 0.0f;
+};
+
 /**
  *
  */
@@ -25,4 +36,34 @@ public:
 
 	/** The HUD that created this widget */
 	TWeakObjectPtr<class AShooterHUD> OwningHUD;
+
+	/** Enemies array */
+	TMap<TWeakObjectPtr<class AShooterCharacter>, FRadarPoint> Enemies;
+
+	/** Pickups array */
+	TMap<TWeakObjectPtr<class AShooterPickup>, FRadarPoint> Pickups;
+
+protected:
+
+	/** Can't rotate this overlay */
+	//TSharedRef<class SOverlay, ESPMode::NotThreadSafe> OverlayStaticRef;
+	
+	/** Can rotate this overlay*/
+	//TSharedRef<class SOverlay, ESPMode::NotThreadSafe> OverlayDynamicRef;
+
+	void AddEnemy(class AShooterCharacter* Enemy);
+	void RemoveEnemy(class AShooterCharacter* Enemy);
+
+	void AddPickup(class AShooterPickup* Pickup);
+	void RemovePickup(class AShooterPickup* Pickup);
+
+	void CharacterSpawnedEvent(class AShooterCharacter* Character);
+	void CharacterKilledEvent(class AShooterCharacter* Character);
+
+	void PickupPickEvent(class AShooterPickup* Pickup);
+	void PickupRespawnEvent(class AShooterPickup* Pickup);
+
+public:
+
+	void UpdateRadarTick(float DeltaTime);
 };

@@ -4,6 +4,9 @@
 
 #include "ShooterPickup.generated.h"
 
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPickupRespawn, AShooterPickup*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnPickupPick, AShooterPickup*);
+
 // Base class for pickup objects that can be placed in the world
 UCLASS(abstract)
 class AShooterPickup : public AActor
@@ -86,4 +89,11 @@ protected:
 protected:
 	/** Returns PickupPSC subobject **/
 	FORCEINLINE UParticleSystemComponent* GetPickupPSC() const { return PickupPSC; }
+
+public:
+
+	/** Global notification for spawn/pick pickup */
+	SHOOTERGAME_API static FOnPickupRespawn NotifyPickupRespawn;
+	SHOOTERGAME_API static FOnPickupPick NotifyPickupPick;
+
 };

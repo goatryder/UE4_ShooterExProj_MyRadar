@@ -63,9 +63,11 @@ class AShooterHUD : public AHUD
 {
 	GENERATED_UCLASS_BODY()
 
-public:
+protected:
 
 	virtual void BeginPlay() override;
+
+public:
 
 	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
@@ -425,5 +427,4 @@ protected:
 	* @returns The next Y position to draw any further strings
 	*/
 	float ShowInfoItems(float YOffset, float TextScale);
-	
 };

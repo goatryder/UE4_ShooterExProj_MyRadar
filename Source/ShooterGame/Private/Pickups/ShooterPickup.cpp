@@ -4,6 +4,9 @@
 #include "Pickups/ShooterPickup.h"
 #include "Particles/ParticleSystemComponent.h"
 
+FOnPickupRespawn AShooterPickup::NotifyPickupRespawn;
+FOnPickupPick AShooterPickup::NotifyPickupPick;
+
 AShooterPickup::AShooterPickup(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	UCapsuleComponent* CollisionComp = ObjectInitializer.CreateDefaultSubobject<UCapsuleComponent>(this, TEXT("CollisionComp"));
@@ -112,6 +115,7 @@ void AShooterPickup::OnPickedUp()
 	}
 
 	OnPickedUpEvent();
+	NotifyPickupPick.Broadcast(this);
 }
 
 void AShooterPickup::OnRespawned()
@@ -133,6 +137,7 @@ void AShooterPickup::OnRespawned()
 	}
 
 	OnRespawnEvent();
+	NotifyPickupRespawn.Broadcast(this);
 }
 
 void AShooterPickup::OnRep_IsActive()

@@ -568,4 +568,3 @@ void AShooterGameMode::RestartGame()
 
 	Super::RestartGame();
 }
-

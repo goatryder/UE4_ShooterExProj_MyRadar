@@ -84,14 +84,14 @@ class AShooterGameMode : public AGameMode
 protected:
 
 	/** delay between first player login and starting match */
-	UPROPERTY(config)
+	UPROPERTY(config, EditAnywhere, BlueprintReadWrite)
 	int32 WarmupTime;
 
 	/** match duration */
-	UPROPERTY(config)
+	UPROPERTY(config, EditAnywhere, BlueprintReadWrite)
 	int32 RoundTime;
 
-	UPROPERTY(config)
+	UPROPERTY(config, EditAnywhere, BlueprintReadWrite)
 	int32 TimeBetweenMatches;
 
 	/** score for kill */
@@ -106,7 +106,7 @@ protected:
 	UPROPERTY(config)
 	float DamageSelfScale;
 
-	UPROPERTY(config)
+	UPROPERTY(config, EditAnywhere, BlueprintReadWrite)
 	int32 MaxBots;
 
 	UPROPERTY()
@@ -122,6 +122,7 @@ protected:
 
 	bool bAllowBots;		
 
+	UFUNCTION(BlueprintCallable)
 	/** spawning all bots for this game */
 	void StartBots();
 

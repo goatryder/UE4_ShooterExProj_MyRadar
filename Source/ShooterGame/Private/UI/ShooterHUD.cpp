@@ -12,6 +12,8 @@
 #include "Online/ShooterPlayerState.h"
 #include "Misc/NetworkVersion.h"
 #include "OnlineSubsystemUtils.h"
+#include "Player/ShooterCharacter.h"
+
 
 #define LOCTEXT_NAMESPACE "ShooterGame.HUD.Menu"
 
@@ -110,7 +112,8 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 
 void AShooterHUD::BeginPlay()
 {
-	// ShowRadar();
+	Super::BeginPlay();
+	ShowRadar();
 }
 
 void AShooterHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -352,25 +355,10 @@ void AShooterHUD::DrawHealth()
 
 void AShooterHUD::DrawRadar()
 {
-	/*
-	Canvas->SetDrawColor(FColor::White);
-	float KillsPosX = Canvas->OrgX + Offset * ScaleUI;
-	float KillsPosY = Canvas->OrgY + Offset * ScaleUI;
-	Canvas->DrawIcon(KillsBg, KillsPosX, KillsPosY, ScaleUI);
-
-	Canvas->DrawIcon(KillsIcon, KillsPosX + Offset * ScaleUI, KillsPosY + ((KillsBg.VL - KillsIcon.VL) / 2) * ScaleUI, ScaleUI);
-	float TextScale = 0.57f;
-	FCanvasTextItem TextItem(FVector2D::ZeroVector, FText::GetEmpty(), BigFont, HUDDark);
-	TextItem.EnableShadow(FLinearColor::Black);
-
-	float SizeX, SizeY;
-	FString Text = LOCTEXT("Kills", "KILLS:").ToString();
-	Canvas->StrLen(BigFont, Text, SizeX, SizeY);*/
-
 	Canvas->SetDrawColor(FColor::White);
 
 	const float BasicRadarPosX = Canvas->OrgX + Offset * ScaleUI;
-	const float BasicRadarPosY = Canvas->OrgY + 2.0f * Offset * ScaleUI + KillsBg.VL;  // left corner with some killcount ui element offset
+	const float BasicRadarPosY = Canvas->OrgY + Offset * ScaleUI;
 
 	const float NorthPosX = BasicRadarPosX + (RadarCircleIcon.UL - RadarNorthIcon.UL) * 0.5 * ScaleUI;  // x on center of radar
 	const float NorthPosY = BasicRadarPosY;
@@ -489,8 +477,8 @@ void AShooterHUD::DrawKills()
 		return;
 
 	Canvas->SetDrawColor(FColor::White);
-	float KillsPosX = Canvas->OrgX + Offset * ScaleUI;
-	float KillsPosY = Canvas->OrgY + Offset * ScaleUI;
+	float KillsPosX = Canvas->ClipX - Canvas->OrgX - (KillsBg.UL + Offset) * ScaleUI;
+	float KillsPosY = Canvas->OrgY + (TimePlaceBg.VL + 2.0f * Offset) * ScaleUI;
 	Canvas->DrawIcon(KillsBg, KillsPosX, KillsPosY,	ScaleUI);
 
 	Canvas->DrawIcon(KillsIcon, KillsPosX + Offset * ScaleUI, KillsPosY + ((KillsBg.VL - KillsIcon.VL ) / 2) * ScaleUI, ScaleUI);
@@ -624,6 +612,8 @@ void AShooterHUD::DrawHUD()
 		if (MyPC)
 		{
 			DrawKills();
+
+			if (RadarWidget) RadarWidget->UpdateRadarTick(GetWorld()->DeltaTimeSeconds);
 			DrawRadar();
 		}
 		if (MyPawn && MyPawn->IsAlive())
@@ -1237,11 +1227,11 @@ void AShooterHUD::ShowRadar()
 		RadarWidget = SNew(SRadarWidget).OwningHUD(this);
 		GEngine->GameViewport->AddViewportWidgetContent(SAssignNew(RadarWidgetContainer, SWeakWidget).PossiblyNullContent(RadarWidget.ToSharedRef()));
 
-		if (PlayerOwner)
+		/*if (PlayerOwner)
 		{
 			PlayerOwner->bShowMouseCursor = true;
 			PlayerOwner->SetInputMode(FInputModeUIOnly());
-		}
+		}*/
 	}
 }
 
@@ -1251,11 +1241,11 @@ void AShooterHUD::HideRadar()
 	{
 		GEngine->GameViewport->RemoveViewportWidgetContent(RadarWidgetContainer.ToSharedRef());
 
-		if (PlayerOwner)
+		/*if (PlayerOwner)
 		{
 			PlayerOwner->bShowMouseCursor = false;
 			PlayerOwner->SetInputMode(FInputModeGameOnly());
-		}
+		}*/
 	}
 }
 

@@ -7,11 +7,20 @@
 
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnShooterCharacterEquipWeapon, AShooterCharacter*, AShooterWeapon* /* new */);
 DECLARE_MULTICAST_DELEGATE_TwoParams(FOnShooterCharacterUnEquipWeapon, AShooterCharacter*, AShooterWeapon* /* old */);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShooterCharacterSpawn, AShooterCharacter*);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnShooterCharacterKill, AShooterCharacter*);
+
 
 UCLASS(Abstract)
 class AShooterCharacter : public ACharacter
 {
 	GENERATED_UCLASS_BODY()
+
+protected:
+
+	virtual void BeginPlay() override;
+
+public:
 
 	virtual void BeginDestroy() override;
 
@@ -398,6 +407,9 @@ private:
 	// Damage & death
 
 public:
+
+	SHOOTERGAME_API static FOnShooterCharacterSpawn NotifyShooterCharacterSpawn;
+	SHOOTERGAME_API static FOnShooterCharacterKill NotifyShooterCharacterKill;
 
 	/** Identifies if pawn is in its dying state */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Health)

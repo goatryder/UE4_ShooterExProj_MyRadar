@@ -29,6 +29,8 @@ FAutoConsoleVariableRef CVarNetEnablePauseRelevancy(
 
 FOnShooterCharacterEquipWeapon AShooterCharacter::NotifyEquipWeapon;
 FOnShooterCharacterUnEquipWeapon AShooterCharacter::NotifyUnEquipWeapon;
+FOnShooterCharacterSpawn AShooterCharacter::NotifyShooterCharacterSpawn;
+FOnShooterCharacterKill AShooterCharacter::NotifyShooterCharacterKill;
 
 AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer)
 	: Super(ObjectInitializer.SetDefaultSubobjectClass<UShooterCharacterMovement>(ACharacter::CharacterMovementComponentName))
@@ -67,6 +69,12 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 
 	BaseTurnRate = 45.f;
 	BaseLookUpRate = 45.f;
+}
+
+void AShooterCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+	NotifyShooterCharacterSpawn.Broadcast(this);
 }
 
 void AShooterCharacter::PostInitializeComponents()
@@ -340,6 +348,8 @@ void AShooterCharacter::OnDeath(float KillingDamage, struct FDamageEvent const& 
 	SetReplicatingMovement(false);
 	TearOff();
 	bIsDying = true;
+
+	NotifyShooterCharacterKill.Broadcast(this);
 
 	if (GetLocalRole() == ROLE_Authority)
 	{
