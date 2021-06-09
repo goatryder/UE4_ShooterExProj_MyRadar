@@ -6,7 +6,7 @@
 #include "Player/ShooterCharacter.h"
 #include "Pickups/ShooterPickup.h"
 
-#define LOCTEXT_NAMESPACE "TestSlate"
+#define LOCTEXT_NAMESPACE "RadarWidget"
 
 void SRadarWidget::Construct(const FArguments& InArgs)
 {
@@ -157,6 +157,7 @@ void SRadarWidget::UpdateRadarTick(float DeltaTime)
 			Elem.Value.ShowTime += DeltaTime;
 		}
 	}
+
 }
 
 #undef LOCTEXT_NAMESPACE

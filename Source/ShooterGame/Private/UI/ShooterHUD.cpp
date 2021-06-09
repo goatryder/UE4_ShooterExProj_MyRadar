@@ -86,6 +86,8 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 	RadarDownFragment = UCanvas::MakeIcon(HUDRadarTexture, 421, 17, 13, 7);
 	RadarDownFragment = UCanvas::MakeIcon(HUDRadarTexture, 445, 16, 13, 7);
 
+	RadarRadius = 5000.0f; // 50m
+
 	Crosshair[EShooterCrosshairDirection::Left] = UCanvas::MakeIcon(HUDMainTexture, 43, 402, 25, 9); // left
 	Crosshair[EShooterCrosshairDirection::Right] = UCanvas::MakeIcon(HUDMainTexture, 88, 402, 25, 9); // right
 	Crosshair[EShooterCrosshairDirection::Top] = UCanvas::MakeIcon(HUDMainTexture, 74, 371, 9, 25); // top
@@ -353,6 +355,53 @@ void AShooterHUD::DrawHealth()
 	Canvas->DrawIcon(HealthIcon,HealthPosX + Offset * ScaleUI, HealthPosY + (HealthBar.VL - HealthIcon.VL) / 2.0f * ScaleUI, ScaleUI);
 }
 
+void AShooterHUD::DrawCanvasIconWithRot(FCanvasIcon Icon, float X, float Y, float Scale, FRotator Rotation = FRotator::ZeroRotator, FVector2D Pivot = FVector2D(0.5f, 0.5f))
+{
+	if (Icon.Texture == nullptr || Canvas == nullptr)
+	{
+		return;
+	}
+
+	if (Scale <= 0.f)
+	{
+		Scale = 1.f;
+	}
+	if (Icon.UL == 0.f)
+	{
+		Icon.UL = Icon.Texture->GetSurfaceWidth();
+	}
+	if (Icon.VL == 0.f)
+	{
+		Icon.VL = Icon.Texture->GetSurfaceHeight();
+	}
+
+	UCanvas& HUDCanvas = *Canvas;
+
+	float XL = FMath::Abs(Icon.UL) * Scale, YL = FMath::Abs(Icon.VL) * Scale;
+
+	float MyClipX = HUDCanvas.OrgX + HUDCanvas.ClipX;
+	float MyClipY = HUDCanvas.OrgY + HUDCanvas.ClipY;
+	float w = X + XL > MyClipX ? MyClipX - X : XL;
+	float h = Y + YL > MyClipY ? MyClipY - Y : YL;
+
+	if (XL > 0.f && YL > 0.f)
+	{
+		float TexSurfaceWidth = Icon.Texture->GetSurfaceWidth();
+		float TexSurfaceHeight = Icon.Texture->GetSurfaceHeight();
+
+		FCanvasTileItem TileItem(FVector2D(X, Y), Icon.Texture->Resource, FVector2D(w, h),
+			FVector2D(Icon.U / TexSurfaceWidth, Icon.V / TexSurfaceHeight),
+			FVector2D(Icon.U / TexSurfaceWidth + Icon.UL / TexSurfaceWidth * w / XL, Icon.V / TexSurfaceHeight + Icon.VL / TexSurfaceHeight * h / YL),
+			HUDCanvas.DrawColor);
+
+		TileItem.BlendMode = FCanvas::BlendToSimpleElementBlend(BLEND_Translucent);
+		TileItem.Rotation = Rotation;
+		TileItem.PivotPoint = Pivot;
+
+		Canvas->Canvas->DrawItem(TileItem);
+	}
+}
+
 void AShooterHUD::DrawRadar()
 {
 	Canvas->SetDrawColor(FColor::White);
@@ -360,16 +409,44 @@ void AShooterHUD::DrawRadar()
 	const float BasicRadarPosX = Canvas->OrgX + Offset * ScaleUI;
 	const float BasicRadarPosY = Canvas->OrgY + Offset * ScaleUI;
 
-	const float NorthPosX = BasicRadarPosX + (RadarCircleIcon.UL - RadarNorthIcon.UL) * 0.5 * ScaleUI;  // x on center of radar
+	const float NorthPosX = BasicRadarPosX + (RadarCircleIcon.UL - RadarNorthIcon.UL) * 0.5f * ScaleUI;  // x on center of radar
 	const float NorthPosY = BasicRadarPosY;
-
-	Canvas->DrawIcon(RadarNorthIcon, NorthPosX, NorthPosY, ScaleUI);
+	
+	DrawCanvasIconWithRot(RadarNorthIcon, NorthPosX, NorthPosY, ScaleUI, FRotator(0.0f, 90.0f, 0.0f));
 
 	const float RadarNorthIconOffset = RadarNorthIcon.VL;
 	const float RadarPosX = BasicRadarPosX;
 	const float RadarPosY = NorthPosY + (RadarNorthIcon.VL + RadarNorthIconOffset) * ScaleUI;
 	
 	Canvas->DrawIcon(RadarCircleIcon, RadarPosX, RadarPosY, ScaleUI);
+	
+
+	// draw radar points for enemies
+
+	if (!RadarWidget.IsValid())
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ShooterHUD::DrawRadar() RadarWidget Is Invalid"));
+		return;
+	}
+
+	APawn* OwnedPawn = GetOwningPawn();
+	
+	// player is radar center pos
+	FVector OwnedPawnLocation = OwnedPawn->GetActorLocation();
+	
+	float RadarCenter = BasicRadarPosX + RadarCircleIcon.UL * 0.5f * ScaleUI;
+	/*
+	// calculate enemies draw positions
+	for (auto& Pair : RadarWidget->Enemies)
+	{
+		FRadarPoint& RadarPoint = Pair.Value;
+
+		FVector EnemyPos = RadarPoint.LastPos;
+		
+		FVector EnemyPosRelative =  
+	}*/
+
+
 }
 
 void AShooterHUD::DrawMatchTimerAndPosition()
@@ -613,7 +690,7 @@ void AShooterHUD::DrawHUD()
 		{
 			DrawKills();
 
-			if (RadarWidget) RadarWidget->UpdateRadarTick(GetWorld()->DeltaTimeSeconds);
+			if (RadarWidget.IsValid()) RadarWidget->UpdateRadarTick(GetWorld()->DeltaTimeSeconds);
 			DrawRadar();
 		}
 		if (MyPawn && MyPawn->IsAlive())

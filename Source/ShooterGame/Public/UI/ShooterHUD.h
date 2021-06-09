@@ -267,6 +267,9 @@ protected:
 	UPROPERTY()
 	FCanvasIcon RadarDownFragment;
 
+	UPROPERTY(EditDefaultsOnly)
+		float RadarRadius;
+
 	/** Radar booster icon. */
 
 	/** UI scaling factor for other resolutions than Full HD. */
@@ -385,6 +388,12 @@ protected:
 
 	/** Draw radar. */
 	void DrawRadar();
+
+	/* 
+	 * Acts same as Canvas->DrawIcon() but with float rotation param
+	 * Use Canvas DrawItem under hood but with Chosen rotation for Item
+	 */
+	void DrawCanvasIconWithRot(FCanvasIcon Icon, float X, float Y, float Scale, FRotator Rotation, FVector2D Pivot);
 
 	/** Delegate for telling other methods when players have started/stopped talking */
 	FOnPlayerTalkingStateChangedDelegate OnPlayerTalkingStateChangedDelegate;
