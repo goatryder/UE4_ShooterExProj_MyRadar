@@ -74,7 +74,20 @@ AShooterCharacter::AShooterCharacter(const FObjectInitializer& ObjectInitializer
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
-	NotifyShooterCharacterSpawn.Broadcast(this);
+
+	// little delay-fix for bug when player respawn he will be shown or radar
+	// because his pawn will spawn -> then it will be possesed
+	// did it because i don't want to messing up with onPossses event and replication
+	
+	FTimerDelegate TimerCallback;
+	TimerCallback.BindLambda([this] {
+		NotifyShooterCharacterSpawn.Broadcast(this);
+	});
+
+	FTimerHandle Handle;
+	GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 2.0f, false);
+
+	//NotifyShooterCharacterSpawn.Broadcast(this);
 }
 
 void AShooterCharacter::PostInitializeComponents()

@@ -267,8 +267,9 @@ protected:
 	UPROPERTY()
 	FCanvasIcon RadarDownFragment;
 
+	/** How many units in game radar can capture and show on hud **/
 	UPROPERTY(EditDefaultsOnly)
-		float RadarRadius;
+		float RadarWorldAreaRadius;
 
 	/** Radar booster icon. */
 

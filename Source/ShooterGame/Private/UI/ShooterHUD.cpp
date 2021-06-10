@@ -14,6 +14,7 @@
 #include "OnlineSubsystemUtils.h"
 #include "Player/ShooterCharacter.h"
 
+#include "DrawDebugHelpers.h"
 
 #define LOCTEXT_NAMESPACE "ShooterGame.HUD.Menu"
 
@@ -86,7 +87,7 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 	RadarDownFragment = UCanvas::MakeIcon(HUDRadarTexture, 421, 17, 13, 7);
 	RadarDownFragment = UCanvas::MakeIcon(HUDRadarTexture, 445, 16, 13, 7);
 
-	RadarRadius = 5000.0f; // 50m
+	RadarWorldAreaRadius = 5000.0f; // 50m
 
 	Crosshair[EShooterCrosshairDirection::Left] = UCanvas::MakeIcon(HUDMainTexture, 43, 402, 25, 9); // left
 	Crosshair[EShooterCrosshairDirection::Right] = UCanvas::MakeIcon(HUDMainTexture, 88, 402, 25, 9); // right
@@ -404,25 +405,6 @@ void AShooterHUD::DrawCanvasIconWithRot(FCanvasIcon Icon, float X, float Y, floa
 
 void AShooterHUD::DrawRadar()
 {
-	Canvas->SetDrawColor(FColor::White);
-
-	const float BasicRadarPosX = Canvas->OrgX + Offset * ScaleUI;
-	const float BasicRadarPosY = Canvas->OrgY + Offset * ScaleUI;
-
-	const float NorthPosX = BasicRadarPosX + (RadarCircleIcon.UL - RadarNorthIcon.UL) * 0.5f * ScaleUI;  // x on center of radar
-	const float NorthPosY = BasicRadarPosY;
-	
-	DrawCanvasIconWithRot(RadarNorthIcon, NorthPosX, NorthPosY, ScaleUI, FRotator(0.0f, 90.0f, 0.0f));
-
-	const float RadarNorthIconOffset = RadarNorthIcon.VL;
-	const float RadarPosX = BasicRadarPosX;
-	const float RadarPosY = NorthPosY + (RadarNorthIcon.VL + RadarNorthIconOffset) * ScaleUI;
-	
-	Canvas->DrawIcon(RadarCircleIcon, RadarPosX, RadarPosY, ScaleUI);
-	
-
-	// draw radar points for enemies
-
 	if (!RadarWidget.IsValid())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("ShooterHUD::DrawRadar() RadarWidget Is Invalid"));
@@ -430,21 +412,80 @@ void AShooterHUD::DrawRadar()
 	}
 
 	APawn* OwnedPawn = GetOwningPawn();
+	if (!OwnedPawn)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("ShooterHUD::DrawRadar() HUD::GetOwningPawn() returned NULL"));
+		return;
+	}
+
+	Canvas->SetDrawColor(FColor::White);
+
+	/** Offset Between North Icon And Radar Circle */
+	const float NorthOffset = RadarNorthIcon.VL * ScaleUI;
+
+	const float BasicRadarPosX = Canvas->OrgX + NorthOffset + Offset * ScaleUI;
+	const float BasicRadarPosY = Canvas->OrgY + NorthOffset + Offset * ScaleUI;
+
+	// Draw Radar Circle
+	Canvas->DrawIcon(RadarCircleIcon, BasicRadarPosX, BasicRadarPosY, ScaleUI);
+
+	const float RadarRadius = RadarCircleIcon.UL * 0.5f * ScaleUI;
+
+	const float RadarCenterX = BasicRadarPosX + RadarRadius;
+	const float RadarCenterY = BasicRadarPosY + RadarRadius;
+
+	const float NorthSizeX = RadarNorthIcon.UL * ScaleUI;
+	const float NorthSizeY = RadarNorthIcon.VL * ScaleUI;
+
+	// Calc North Icon Rotation And Position On Screen
+	float Dot = FVector::DotProduct(OwnedPawn->GetActorForwardVector(), FVector::ForwardVector);
+	FVector Cross = FVector::CrossProduct(OwnedPawn->GetActorForwardVector(), FVector::ForwardVector);
+	float Sign = FMath::Sign(FVector::DotProduct(Cross, FVector::UpVector));
+	float Rad = acosf(Dot) * Sign;
+	float Angle = (180.f) / PI * Rad;
+	float RadCircOffsetX = sinf(Rad);
+	float RadCircOffsetY = -cosf(Rad);
+
+	float NorthRadialOffsetX = (RadarRadius + NorthOffset) * RadCircOffsetX;
+	float NorthRadialOffsetY = (RadarRadius + NorthOffset) * RadCircOffsetY;
+
+	float NorthIconPointX = RadarCenterX + NorthRadialOffsetX - NorthSizeX * 0.5f;
+	float NorthIconPointY = RadarCenterY + NorthRadialOffsetY - NorthSizeY * 0.5f;
+	
+	// Draw Radar North Icon
+	DrawCanvasIconWithRot(RadarNorthIcon, NorthIconPointX, NorthIconPointY, ScaleUI, FRotator(0.0f, Angle, 0.0f));
+
+	// Enemies Radar Points:
 	
 	// player is radar center pos
 	FVector OwnedPawnLocation = OwnedPawn->GetActorLocation();
-	
-	float RadarCenter = BasicRadarPosX + RadarCircleIcon.UL * 0.5f * ScaleUI;
-	/*
+
 	// calculate enemies draw positions
 	for (auto& Pair : RadarWidget->Enemies)
 	{
 		FRadarPoint& RadarPoint = Pair.Value;
 
 		FVector EnemyPos = RadarPoint.LastPos;
+		FVector EnemyPosRelative = (OwnedPawnLocation - EnemyPos) / RadarWorldAreaRadius;
+		FVector EnemyPosDelta = EnemyPos - OwnedPawnLocation;
 		
-		FVector EnemyPosRelative =  
-	}*/
+		FVector EnemyRelDirection = FVector(EnemyPosDelta);
+		EnemyRelDirection.Normalize();
+
+		float EnemyNormalizedDist = FMath::Clamp(EnemyPosDelta.Size() / RadarWorldAreaRadius, 0.0f, 1.0f);
+		float EnemyRadarDist = EnemyNormalizedDist * RadarRadius;
+
+		float EnemyPointRadarCircOffsetX = EnemyRadarDist * EnemyRelDirection.X * RadCircOffsetX;
+		float EnemyPointRadarCircOffsetY = EnemyRadarDist * EnemyRelDirection.Y * RadCircOffsetY;
+
+		float EnemyRadarPointX = EnemyPointRadarCircOffsetX + RadarCenterX;
+		float EnemyRadarPointY = EnemyPointRadarCircOffsetY + RadarCenterY;
+
+		DrawCanvasIconWithRot(RadarEnemyIcon, EnemyRadarPointX, EnemyRadarPointY, ScaleUI);
+
+		// todo: fix respawned owned player show on radar
+		// todo: fix on death remove from radar enemy
+	}
 
 
 }

@@ -66,4 +66,9 @@ protected:
 public:
 
 	void UpdateRadarTick(float DeltaTime);
+
+private:
+
+	FDelegateHandle DelegateHandle_CharacterSpawn;
+	FDelegateHandle DelegateHandle_CharacterKill;
 };

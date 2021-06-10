@@ -12,8 +12,8 @@ void SRadarWidget::Construct(const FArguments& InArgs)
 {
 	OwningHUD = InArgs._OwningHUD;
 
-	AShooterCharacter::NotifyShooterCharacterSpawn.AddRaw(this, &SRadarWidget::CharacterSpawnedEvent);
-	AShooterCharacter::NotifyShooterCharacterKill.AddRaw(this, &SRadarWidget::CharacterKilledEvent);
+	DelegateHandle_CharacterSpawn = AShooterCharacter::NotifyShooterCharacterSpawn.AddRaw(this, &SRadarWidget::CharacterSpawnedEvent);
+	DelegateHandle_CharacterKill =  AShooterCharacter::NotifyShooterCharacterKill.AddRaw(this, &SRadarWidget::CharacterKilledEvent);
 
 	AShooterPickup::NotifyPickupPick.AddRaw(this, &SRadarWidget::PickupPickEvent);
 	AShooterPickup::NotifyPickupRespawn.AddRaw(this, &SRadarWidget::PickupRespawnEvent);
@@ -99,8 +99,11 @@ void SRadarWidget::CharacterSpawnedEvent(AShooterCharacter* Character)
 {
 	if (Character == nullptr || Character->IsLocallyControlled())
 	{
+
+		if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("[Radar Add Enemy] Cant add LocallyControlled!"));
 		return;
 	}
+	if (GEngine) GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Green, FString("[Radar Add Enemy] Added Enemy ") + Character->GetName());
 
 	AddEnemy(Character);
 }
