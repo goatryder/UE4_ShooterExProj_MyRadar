@@ -268,6 +268,10 @@ protected:
 	UPROPERTY(EditDefaultsOnly)
 		float RadarWorldAreaRadius;
 
+	/** If Z axis differance is bigger then trashold then add "UP" and "Down" Icons on radar elements **/
+	UPROPERTY(EditDefaultsOnly)
+		float RadarIconHeightIndicatorTreshold;
+
 	/** Radar booster icon. */
 
 	/** UI scaling factor for other resolutions than Full HD. */

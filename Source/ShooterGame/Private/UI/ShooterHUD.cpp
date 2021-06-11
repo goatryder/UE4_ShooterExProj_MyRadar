@@ -83,11 +83,11 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 	RadarHitIcon = UCanvas::MakeIcon(HUDRadarTexture, 304, 0, 22, 133);
 	RadarEnemyIcon = UCanvas::MakeIcon(HUDRadarTexture, 365, 13, 16, 16);
 	RadarPickupIcon = UCanvas::MakeIcon(HUDRadarTexture, 397, 13, 14, 14);
-	RadarUpFragment = UCanvas::MakeIcon(HUDRadarTexture, 397, 13, 14, 14);
 	RadarDownFragment = UCanvas::MakeIcon(HUDRadarTexture, 421, 17, 13, 7);
-	RadarDownFragment = UCanvas::MakeIcon(HUDRadarTexture, 445, 16, 13, 7);
+	RadarUpFragment = UCanvas::MakeIcon(HUDRadarTexture, 445, 16, 13, 7);
 
 	RadarWorldAreaRadius = 5000.0f; // 50m
+	RadarIconHeightIndicatorTreshold = 200.0f; // 2m
 
 	Crosshair[EShooterCrosshairDirection::Left] = UCanvas::MakeIcon(HUDMainTexture, 43, 402, 25, 9); // left
 	Crosshair[EShooterCrosshairDirection::Right] = UCanvas::MakeIcon(HUDMainTexture, 88, 402, 25, 9); // right
@@ -103,7 +103,6 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 	Offsets[EShooterHudPosition::BackRight] = FVector2D(-120,-125);
 	Offsets[EShooterHudPosition::Back] = FVector2D(0,-173);
 	Offsets[EShooterHudPosition::BackLeft] = FVector2D(120,-125);
-
 
 	HitNotifyCrosshair = UCanvas::MakeIcon(HUDMainTexture, 54, 453, 50, 50); 
 
@@ -455,15 +454,61 @@ void AShooterHUD::DrawRadar()
 	// Draw North Icon
 	DrawCanvasIconWithRot(RadarNorthIcon, NorthIconPointPosX, NorthIconPointPosY, ScaleUI, FRotator(0.0f, Angle, 0.0f));
 
-	// Calc Enemy Icons Positions
-	FVector OwnedPawnLocation = OwnedPawn->GetActorLocation(); // player is radar center pos
+	// Icon offsets
 	float EnemyIconRadius = RadarEnemyIcon.UL * 0.5 * ScaleUI;
+	float HeightIconCenterOffsetX = RadarUpFragment.UL * 0.5f * ScaleUI;
+	float HeightIconCenterOffsetY = RadarUpFragment.VL * 0.5f * ScaleUI;
+	float PickupIconCenterOffsetX = RadarPickupIcon.UL * 0.5f * ScaleUI;
+	float PickupIconCenterOffsetY = RadarPickupIcon.VL * 0.5f * ScaleUI;
 
+	FVector OwnedPawnLocation = OwnedPawn->GetActorLocation(); // player is radar center pos
+
+	// Calc Pickups Icons Positions
+	for (auto& Pair : RadarCollector->Pickups)
+	{
+		FRadarPoint& RadarPoint = Pair.Value;
+
+		FVector PickupLocation = RadarPoint.LastPos;
+		FVector2D PickupPosDeltaXY = FVector2D(OwnedPawnLocation - PickupLocation);
+
+		FVector2D PickupRelDirection = FVector2D(PickupPosDeltaXY);
+		PickupRelDirection.Normalize();
+
+		float PickupNormalizedDist = FMath::Clamp(PickupPosDeltaXY.Size() / RadarWorldAreaRadius, 0.0f, 1.0f);
+		float PickupRadarDist = PickupNormalizedDist * RadarRadius;
+
+		// some how point is 90 deg rotated from start, so we spawn X and Y with each other
+		float BasicPickupPointPosX = PickupRadarDist * PickupRelDirection.Y;
+		float BasicPickupPointPosY = -(PickupRadarDist * PickupRelDirection.X);
+
+		float PickupPointRadialOffsetX = BasicPickupPointPosX * CosTheta + BasicPickupPointPosY * SinTheta;
+		float PickupPointRadialOffsetY = -(BasicPickupPointPosX * SinTheta) + BasicPickupPointPosY * CosTheta;
+
+		float PickupPointPosX = RadarCenterY + PickupPointRadialOffsetX;
+		float PickupPointPosY = RadarCenterX + PickupPointRadialOffsetY;
+
+		// Draw Radar Pickup Icon
+		Canvas->DrawIcon(RadarPickupIcon, PickupPointPosX - PickupIconCenterOffsetX, PickupPointPosY - PickupIconCenterOffsetY, ScaleUI);
+
+		// If Higher/Lower then RadarIconHeightIndicatorTreshold Draw Height Indicator Icon
+		float PickupDeltaZ = PickupLocation.Z - OwnedPawnLocation.Z;
+		if (PickupDeltaZ > RadarIconHeightIndicatorTreshold)
+		{
+			Canvas->DrawIcon(RadarUpFragment, PickupPointPosX - HeightIconCenterOffsetX, PickupPointPosY - (HeightIconCenterOffsetY * 3.0f), ScaleUI);
+		}
+		else if (PickupDeltaZ < -RadarIconHeightIndicatorTreshold)
+		{
+			Canvas->DrawIcon(RadarDownFragment, PickupPointPosX - HeightIconCenterOffsetX, PickupPointPosY + HeightIconCenterOffsetY, ScaleUI);
+		}
+	}
+
+	// Calc Enemy Icons Positions
 	for (auto& Pair : RadarCollector->Enemies)
 	{
 		FRadarPoint& RadarPoint = Pair.Value;
 
-		FVector2D EnemyPosDeltaXY = FVector2D(OwnedPawnLocation - RadarPoint.LastPos);
+		FVector EnemyLocation = RadarPoint.LastPos;
+		FVector2D EnemyPosDeltaXY = FVector2D(OwnedPawnLocation - EnemyLocation);
 		
 		FVector2D EnemyRelDirection = FVector2D(EnemyPosDeltaXY);
 		EnemyRelDirection.Normalize();
@@ -478,13 +523,23 @@ void AShooterHUD::DrawRadar()
 		float EnemyPointRadialOffsetX = BasicEnemyPointPosX * CosTheta + BasicEnemyPointPosY * SinTheta;
 		float EnemyPointRadialOffsetY = -(BasicEnemyPointPosX * SinTheta) + BasicEnemyPointPosY * CosTheta;
 
-		float EnemyPointPosX = RadarCenterY + EnemyPointRadialOffsetX - EnemyIconRadius;
-		float EnemyPointPosY = RadarCenterX + EnemyPointRadialOffsetY - EnemyIconRadius;
+		float EnemyPointPosX = RadarCenterY + EnemyPointRadialOffsetX;
+		float EnemyPointPosY = RadarCenterX + EnemyPointRadialOffsetY;
 		
 		// Draw Radar Enemy Icon
-		Canvas->DrawIcon(RadarEnemyIcon, EnemyPointPosX, EnemyPointPosY, ScaleUI);
-	}
+		Canvas->DrawIcon(RadarEnemyIcon, EnemyPointPosX - EnemyIconRadius, EnemyPointPosY - EnemyIconRadius, ScaleUI);
 
+		// If Higher/Lower then RadarIconHeightIndicatorTreshold Draw Height Indicator Icon
+		float EnemyDeltaZ = EnemyLocation.Z - OwnedPawnLocation.Z;
+		if (EnemyDeltaZ > RadarIconHeightIndicatorTreshold)
+		{
+			Canvas->DrawIcon(RadarUpFragment, EnemyPointPosX - HeightIconCenterOffsetX, EnemyPointPosY - HeightIconCenterOffsetY, ScaleUI);
+		}
+		else if (EnemyDeltaZ < -RadarIconHeightIndicatorTreshold)
+		{
+			Canvas->DrawIcon(RadarDownFragment, EnemyPointPosX - HeightIconCenterOffsetX, EnemyPointPosY - HeightIconCenterOffsetY, ScaleUI);
+		}
+	}
 }
 
 void AShooterHUD::DrawMatchTimerAndPosition()
