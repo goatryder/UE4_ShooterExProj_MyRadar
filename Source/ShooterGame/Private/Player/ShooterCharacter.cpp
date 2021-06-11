@@ -85,9 +85,7 @@ void AShooterCharacter::BeginPlay()
 	});
 
 	FTimerHandle Handle;
-	GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 2.0f, false);
-
-	//NotifyShooterCharacterSpawn.Broadcast(this);
+	GetWorld()->GetTimerManager().SetTimer(Handle, TimerCallback, 1.0f, false);
 }
 
 void AShooterCharacter::PostInitializeComponents()
