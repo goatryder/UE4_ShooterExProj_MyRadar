@@ -3,7 +3,10 @@
 #pragma once
 
 #include "ShooterTypes.h"
+#include "ShooterRadarCollector.h"
+
 #include "ShooterHUD.generated.h"
+
 
 struct FHitData
 {
@@ -384,17 +387,40 @@ protected:
 	/** Draw death messages. */
 	void DrawDeathMessages();
 
-	/** Draw radar. */
+	/*
+	 * Acts same as Canvas->DrawIcon() with rotation options
+	 * Use Canvas DrawItem under hood but with Chosen rotation/pivot for Item
+	 */
+	void DrawCanvasIconWithRot(FCanvasIcon& Icon, float X, float Y, float Scale, FRotator Rotation, FVector2D Pivot);
+
+	/** Draw player hit direction indicator on radar circle */
+	void DrawRadarHitIndicator();
+
+	/** Draw RadarPoints Icons recieved from RadarCollector*/
+
+	/**
+	 * Draw RadarPoints Icons recieved from RadarCollector.
+
+	 * @param	RadarPoints				Recieved RadarPoints Map from RadarCollector.
+	 * @param	RadarWorldCenter		Actual Radar Center In World (Usually this is HUD Owned Player).
+	 * @param	RadarCenter				RadarCenter on HUD Screen Space (should be scaled).
+	 * @param	RadarRadius				RadarCircleIcon Radius (should be scaled).
+	 * @param	RadarRotRadians			Radar Rotation from X World Axis
+	 * @param	Icon					RadarPoint Icon to draw.
+	 * @param	IconOffset				Icon point draw positive offset.
+	 * @param	bShowHeightIndicator	Draws "Higher", "Lower" icons on top of Icon when Points Z axis is higher then RadarIconHeightIndicatorTreshold
+	 * @param	HeightIndicatorOffset	"Higher", "Lower" icons positive offset
+	 */
+	void DrawRadarCollectorPoints(TMap<TWeakObjectPtr<AActor>, FRadarPoint> &RadarPoints, 
+		FVector RadarWorldCenter, FVector2D RadarCenter, float RadarRadius, float RadarRotRadians,
+		FCanvasIcon &Icon, FVector2D IconOffset = FVector2D::ZeroVector,
+		bool bShowHeightIndicator = false, FVector2D HeightIndicatorOffset = FVector2D::ZeroVector);
+
+	/** Draw Radar Circle, Radar North Icon, RadarPoints Icons, Radar Hit Direction Indicator */
 	void DrawRadar();
 
 	/** Class to recieve radar info from */
 	class UShooterRadarCollector* RadarCollector;
-
-	/* 
-	 * Acts same as Canvas->DrawIcon() but with float rotation param
-	 * Use Canvas DrawItem under hood but with Chosen rotation for Item
-	 */
-	void DrawCanvasIconWithRot(FCanvasIcon Icon, float X, float Y, float Scale, FRotator Rotation, FVector2D Pivot);
 
 	/** Delegate for telling other methods when players have started/stopped talking */
 	FOnPlayerTalkingStateChangedDelegate OnPlayerTalkingStateChangedDelegate;

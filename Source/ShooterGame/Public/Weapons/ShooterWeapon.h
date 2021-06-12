@@ -14,6 +14,8 @@ class UForceFeedbackEffect;
 class USoundCue;
 class UMatineeCameraShake;
 
+DECLARE_MULTICAST_DELEGATE_TwoParams(FOnShooterCharacterWeaponShot, AShooterCharacter*, AShooterWeapon*);
+
 namespace EWeaponState
 {
 	enum Type
@@ -535,5 +537,8 @@ protected:
 	FORCEINLINE USkeletalMeshComponent* GetMesh1P() const { return Mesh1P; }
 	/** Returns Mesh3P subobject **/
 	FORCEINLINE USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
+
+public:
+	SHOOTERGAME_API static FOnShooterCharacterWeaponShot NotifyShooterCharacterWeaponShot;
 };
 

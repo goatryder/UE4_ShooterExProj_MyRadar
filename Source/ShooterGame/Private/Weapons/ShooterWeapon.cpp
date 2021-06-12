@@ -9,6 +9,8 @@
 #include "UI/ShooterHUD.h"
 #include "Camera/CameraShake.h"
 
+FOnShooterCharacterWeaponShot AShooterWeapon::NotifyShooterCharacterWeaponShot;
+
 AShooterWeapon::AShooterWeapon(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	Mesh1P = ObjectInitializer.CreateDefaultSubobject<USkeletalMeshComponent>(this, TEXT("WeaponMesh1P"));
@@ -878,6 +880,9 @@ void AShooterWeapon::SimulateWeaponFire()
 			PC->ClientPlayForceFeedback(FireForceFeedback, FFParams);
 		}
 	}
+
+	// global notifier on character shot
+	NotifyShooterCharacterWeaponShot.Broadcast(MyPawn, this);
 }
 
 void AShooterWeapon::StopSimulatingWeaponFire()
