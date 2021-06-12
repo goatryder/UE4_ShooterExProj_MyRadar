@@ -410,7 +410,7 @@ void AShooterHUD::DrawRadarHitIndicator()
 void AShooterHUD::DrawRadarCollectorPoints(TMap<TWeakObjectPtr<AActor>, FRadarPoint>&RadarPoints,
 	FVector RadarWorldCenter, FVector2D RadarCenter, float RadarRadius, float RadarRotRadians,
 	FCanvasIcon &Icon, FVector2D IconOffset,
-	bool bShowHeightIndicator, FVector2D HeightIndicatorOffset)
+	bool bShowHeightIndicator, FVector2D HeightIndicatorOffset, bool bHeightIndOffsetUseNegY)
 {
 	float SinTheta = sinf(RadarRotRadians);
 	float CosTheta = -cosf(RadarRotRadians);
@@ -420,17 +420,24 @@ void AShooterHUD::DrawRadarCollectorPoints(TMap<TWeakObjectPtr<AActor>, FRadarPo
 	{
 		FRadarPoint& RadarPoint = Pair.Value;
 
-		if (!RadarPoint.bCanShow)
+		if (!RadarPoint.bCanShow)  // check FRadarPoint bCanShow param
 		{
-			return;
+			continue;
 		}
 
 		FVector2D PointPosDeltaXY = FVector2D(RadarWorldCenter - RadarPoint.LastPos);
+		float DistRelToRadius = PointPosDeltaXY.Size() / RadarWorldAreaRadius;
+
+		
+		if (!RadarPoint.bCanShowIfOutRadarBorder && DistRelToRadius > 1.0f)  // check FRadarPoint bCanShowIfOutRadarBorder param
+		{
+			continue;
+		}
 
 		FVector2D PointRelDirection = FVector2D(PointPosDeltaXY);
 		PointRelDirection.Normalize();
 
-		float PointNormalizedDist = FMath::Clamp(PointPosDeltaXY.Size() / RadarWorldAreaRadius, 0.0f, 1.0f);
+		float PointNormalizedDist = FMath::Clamp(DistRelToRadius, 0.0f, 1.0f);
 		float PointRadarDist = PointNormalizedDist * RadarRadius;
 
 		// somehow point is 90 deg rotated from start, so we spawn X and Y with each other
@@ -450,11 +457,13 @@ void AShooterHUD::DrawRadarCollectorPoints(TMap<TWeakObjectPtr<AActor>, FRadarPo
 		float PickupDeltaZ = RadarPoint.LastPos.Z - RadarWorldCenter.Z;
 		if (PickupDeltaZ > RadarIconHeightIndicatorTreshold)
 		{
-			Canvas->DrawIcon(RadarUpFragment, PointPosX + HeightIndicatorOffset.X, PointPosY + HeightIndicatorOffset.Y, ScaleUI);
+			float UpIconAnchorOffsetY = bHeightIndOffsetUseNegY ? RadarUpFragment.VL * ScaleUI : 0.0f; // change anchor to bottom if bHeightIndOffsetUseNegY
+			Canvas->DrawIcon(RadarUpFragment, PointPosX + HeightIndicatorOffset.X, PointPosY + HeightIndicatorOffset.Y - UpIconAnchorOffsetY, ScaleUI);
 		}
 		else if (PickupDeltaZ < -RadarIconHeightIndicatorTreshold)
 		{
-			Canvas->DrawIcon(RadarDownFragment, PointPosX + HeightIndicatorOffset.X, PointPosY + HeightIndicatorOffset.Y, ScaleUI);
+			float OffsetMult = bHeightIndOffsetUseNegY ? -1.0f : 1.0f;  // handle arg bHeightIndOffsetUseNegY
+			Canvas->DrawIcon(RadarDownFragment, PointPosX + HeightIndicatorOffset.X, PointPosY + HeightIndicatorOffset.Y * OffsetMult, ScaleUI);
 		}
 	}
 }
@@ -519,14 +528,14 @@ void AShooterHUD::DrawRadar()
 	FVector OwnedPawnLocation = OwnedPawn->GetActorLocation(); // player is radar center pos
 	
 	// Draw Pickups Radar Points
+	DrawRadarCollectorPoints(RadarCollector->Pickups, OwnedPawnLocation, RadarCenter, RadarRadius, AngleRad,
+		RadarPickupIcon, FVector2D(-PickupIconCenterOffsetX, -PickupIconCenterOffsetY),
+		true, FVector2D(-HeightIconCenterOffsetX, -HeightIconCenterOffsetY * 1.5f), true);
+
+	// Draw Enemies Radar Points
 	DrawRadarCollectorPoints(RadarCollector->Enemies, OwnedPawnLocation, RadarCenter, RadarRadius, AngleRad,
 		RadarEnemyIcon, FVector2D(-EnemyIconRadius), 
 		true, FVector2D(-HeightIconCenterOffsetX, -HeightIconCenterOffsetY));
-
-	// Draw Enemies Radar Points
-	DrawRadarCollectorPoints(RadarCollector->Pickups, OwnedPawnLocation, RadarCenter, RadarRadius, AngleRad,
-		RadarPickupIcon, FVector2D(-PickupIconCenterOffsetX, -PickupIconCenterOffsetY), 
-		true, FVector2D(-HeightIconCenterOffsetX, HeightIconCenterOffsetY * 1.5f));
 }
 
 void AShooterHUD::DrawMatchTimerAndPosition()

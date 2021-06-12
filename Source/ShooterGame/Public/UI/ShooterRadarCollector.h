@@ -62,11 +62,12 @@ struct FRadarPoint
 		ShowTime += DeltaTime;
 		if (ShowTimeMax > 0.0f && ShowTime >= ShowTimeMax)
 		{
-			Show(false);
+			//Show(false);  disabled for dbg
 			ShowTime = 0.0f;
 		}
 	}
 
+	/** Handling Show/Hide Logic. Result is updated bCanShow param */
 	void Show(bool bShowOnRadar)
 	{
 		if (!Actor.IsValid())
@@ -108,28 +109,41 @@ public:
 	TMap<TWeakObjectPtr<AActor>, FRadarPoint> Pickups;
 
 protected:
-	void AddEnemy(AShooterCharacter* Enemy);
-	void RemoveEnemy(AShooterCharacter* Enemy);
 
+	/** Add enemy radar point to Enemies map */
+	void AddEnemy(AShooterCharacter* Enemy);
+	/** Remove enemy radar point from Enemies map */
+	void RemoveEnemy(AShooterCharacter* Enemy);
+	/** Call Show(true) for enemy radar point if found in Enemies map */
+	void ShowEnemy(AShooterCharacter* Enemy);
+
+	/** Show pickup radar point, add pickup to Pickups map if not found in map*/
 	void AddPickup(AShooterPickup* Pickup);
+	/** Hide pickup radar point*/
 	void RemovePickup(AShooterPickup* Pickup);
 
+	/** Add character to enemies map */
 	UFUNCTION()
 		void CharacterSpawnedEvent(AShooterCharacter* Character);
 	
+	/** Calls AddEnemy() */
 	UFUNCTION()
 		void CharacterKilledEvent(AShooterCharacter* Character);
 
+	/** Calss RemoveEnemy() */
 	UFUNCTION()
 		void PickupPickEvent(AShooterPickup* Pickup);
 	
+	/** Calls AddPickup() */
 	UFUNCTION()
 		void PickupRespawnEvent(AShooterPickup* Pickup);
 
+	/** Calls ShowEnemy() */
 	UFUNCTION()
 		void CharacterWeaponShotEvent(AShooterCharacter* Character, AShooterWeapon* Weapon);
 
 public:
+	/** Calls Update() for radar points in Enemies, Pickups map radar points */
 	void UpdateRadarTick(float DeltaTime);
 
 private:

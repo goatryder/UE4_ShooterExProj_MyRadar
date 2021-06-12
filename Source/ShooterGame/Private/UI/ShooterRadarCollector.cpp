@@ -12,14 +12,16 @@ FRadarPoint RadarPointEnemyBase = { nullptr,  AShooterCharacter::StaticClass(), 
 
 UShooterRadarCollector::UShooterRadarCollector()
 {
-	// Subs delegates
-	AShooterCharacter::NotifyShooterCharacterSpawn.AddUObject(this, &UShooterRadarCollector::CharacterSpawnedEvent);
-	AShooterCharacter::NotifyShooterCharacterKill.AddUObject(this, &UShooterRadarCollector::CharacterKilledEvent);
-	AShooterPickup::NotifyPickupPick.AddUObject(this, &UShooterRadarCollector::PickupPickEvent);
-	AShooterPickup::NotifyPickupRespawn.AddUObject(this, &UShooterRadarCollector::PickupRespawnEvent);
-	AShooterWeapon::NotifyShooterCharacterWeaponShot.AddUObject(this, &UShooterRadarCollector::CharacterWeaponShotEvent);
-
-	// todo add subs Delegate character damaged (to display hit indicator on radar)
+	if (this != StaticClass()->GetDefaultObject())  // if cdo, do not subs to delegate
+	{
+		// Subs delegates
+		DelegateHandle_CharacterSpawn =               AShooterCharacter::NotifyShooterCharacterSpawn.AddUObject(this, &UShooterRadarCollector::CharacterSpawnedEvent);
+		DelegateHandle_CharacterKill =                AShooterCharacter::NotifyShooterCharacterKill.AddUObject(this, &UShooterRadarCollector::CharacterKilledEvent);
+		DelegateHandle_PickupPick =                   AShooterPickup::NotifyPickupPick.AddUObject(this, &UShooterRadarCollector::PickupPickEvent);
+		DelegateHandle_PickupRespawn =                AShooterPickup::NotifyPickupRespawn.AddUObject(this, &UShooterRadarCollector::PickupRespawnEvent);
+		DelegateHandle_CharacterWeaponShot =          AShooterWeapon::NotifyShooterCharacterWeaponShot.AddUObject(this, &UShooterRadarCollector::CharacterWeaponShotEvent);
+		// todo add subs Delegate character damaged (to display hit indicator on radar)
+	}
 }
 
 void UShooterRadarCollector::BeginDestroy()
@@ -27,10 +29,11 @@ void UShooterRadarCollector::BeginDestroy()
 	Super::BeginDestroy();
 
 	// Unsubs delegates
-	if (DelegateHandle_PickupPick.IsValid()) AShooterPickup::NotifyPickupPick.Remove(DelegateHandle_PickupPick);
-	if (DelegateHandle_PickupRespawn.IsValid()) AShooterPickup::NotifyPickupRespawn.Remove(DelegateHandle_PickupRespawn);
-	if (DelegateHandle_CharacterSpawn.IsValid()) AShooterCharacter::NotifyShooterCharacterSpawn.Remove(DelegateHandle_CharacterSpawn);
-	if (DelegateHandle_CharacterKill.IsValid()) AShooterCharacter::NotifyShooterCharacterKill.Remove(DelegateHandle_CharacterKill);
+	if (DelegateHandle_CharacterSpawn.IsValid())      AShooterCharacter::NotifyShooterCharacterSpawn.Remove(DelegateHandle_CharacterSpawn);
+	if (DelegateHandle_CharacterKill.IsValid())       AShooterCharacter::NotifyShooterCharacterKill.Remove(DelegateHandle_CharacterKill);
+	if (DelegateHandle_PickupPick.IsValid())          AShooterPickup::NotifyPickupPick.Remove(DelegateHandle_PickupPick);
+	if (DelegateHandle_PickupRespawn.IsValid())       AShooterPickup::NotifyPickupRespawn.Remove(DelegateHandle_PickupRespawn);
+	if (DelegateHandle_CharacterWeaponShot.IsValid()) AShooterWeapon::NotifyShooterCharacterWeaponShot.Remove(DelegateHandle_CharacterWeaponShot);
 }
 
 void UShooterRadarCollector::AddEnemy(AShooterCharacter* Enemy)
@@ -56,6 +59,20 @@ void UShooterRadarCollector::RemoveEnemy(AShooterCharacter* Enemy)
 	}
 
 	Enemies.Remove(Enemy);
+}
+
+void UShooterRadarCollector::ShowEnemy(AShooterCharacter* Enemy)
+{
+	if (Enemy == nullptr)
+	{
+		return;
+	}
+
+	if (Enemies.Contains(Enemy))
+	{
+		FRadarPoint& Point = Enemies[Enemy];
+		Point.Show(true);
+	}
 }
 
 void UShooterRadarCollector::AddPickup(AShooterPickup* Pickup)
@@ -132,13 +149,12 @@ void UShooterRadarCollector::PickupRespawnEvent(AShooterPickup* Pickup)
 
 void UShooterRadarCollector::CharacterWeaponShotEvent(AShooterCharacter* Character, AShooterWeapon* Weapon)
 {
-	// Todo: fix two times event fire
-	// Debug
-	if (GEngine)
+	if (Character == nullptr)
 	{
-		FString Msg = FString::Printf(TEXT("[RadarCollector] Character %s Shot from %s"), *Character->GetName(), *Weapon->GetName());
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Cyan, Msg);
+		return;
 	}
+
+	ShowEnemy(Character);
 }
 
 void UShooterRadarCollector::UpdateRadarTick(float DeltaTime)
