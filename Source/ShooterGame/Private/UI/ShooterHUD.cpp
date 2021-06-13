@@ -78,7 +78,7 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 
 	RadarNorthIcon = UCanvas::MakeIcon(HUDRadarTexture, 249, 7, 27, 14);
 	RadarCircleIcon = UCanvas::MakeIcon(HUDRadarTexture, 9, 23, 222, 222);
-	RadarHitIcon = UCanvas::MakeIcon(HUDRadarTexture, 304, 0, 22, 133);
+	RadarHitIcon = UCanvas::MakeIcon(HUDRadarTexture, 256, 128, 38, 117);
 	RadarEnemyIcon = UCanvas::MakeIcon(HUDRadarTexture, 365, 13, 16, 16);
 	RadarPickupIcon = UCanvas::MakeIcon(HUDRadarTexture, 397, 13, 14, 14);
 	RadarDownFragment = UCanvas::MakeIcon(HUDRadarTexture, 421, 17, 13, 7);
@@ -406,7 +406,6 @@ void AShooterHUD::DrawCanvasIconWithRot(FCanvasIcon& Icon, float X, float Y, flo
 
 void AShooterHUD::DrawRadarHitIndicator(FVector TrackHitCharacterPos, FVector2D RadarCenter, float RadarRadius, float RadarRotRadians)
 {
-	
 	float SinTheta = sinf(RadarRotRadians);
 	float CosTheta = -cosf(RadarRotRadians);
 
@@ -419,20 +418,22 @@ void AShooterHUD::DrawRadarHitIndicator(FVector TrackHitCharacterPos, FVector2D 
 		HitDirection2D.Normalize();
 
 		// swap x and y to rotate to 90 deg angle
-		float BasicPointPosX =  -HitDirection2D.Y * RadarRadius;
-		float BasicPointPosY =  HitDirection2D.X * RadarRadius;
+		float BasicPointPosX =  HitDirection2D.Y * RadarRadius;
+		float BasicPointPosY =  -HitDirection2D.X * RadarRadius;
 
-		//float RadialOffsetX = RadarRadius * SinTheta;
-		//float RadialOffsetY = RadarRadius * CosTheta;
+		float PointRadialOffsetX = BasicPointPosX * CosTheta + BasicPointPosY * SinTheta;
+		float PointRadialOffsetY = -(BasicPointPosX * SinTheta) + BasicPointPosY * CosTheta;
 
-		float PointPosX = RadarCenter.Y + BasicPointPosX;
-		float PointPosY = RadarCenter.X + BasicPointPosY;
+		float PointPosX = RadarCenter.Y + PointRadialOffsetX;
+		float PointPosY = RadarCenter.X + PointRadialOffsetY;
 
-		DrawRect(FColor::Red, PointPosX - 2.0f, PointPosY - 2.0f, 4.0f, 4.0f);
+		float HItMarkerRotDeg = (180.f) / PI * atan2(PointRadialOffsetY, PointRadialOffsetX) + 90.0f;
+		
+		float IconOffsetX = RadarHitIcon.UL * 0.5f * ScaleUI;
+
+		DrawCanvasIconWithRot(RadarHitIcon, PointPosX - IconOffsetX, PointPosY, ScaleUI, FRotator(0.0f, HItMarkerRotDeg, 0.0f), FVector2D(0.5f, 0.0f));
+		//DrawRect(FColor::Magenta, PointPosX - 1.0f, PointPosY - 1.0f, 2.0f, 2.0f);
 	}
-	
-	//DrawCanvasIconWithRot(RadarHitIcon, )
-
 }
 
 void AShooterHUD::DrawRadarCollectorPoints(TMap<TWeakObjectPtr<AActor>, FRadarPoint>&RadarPoints,

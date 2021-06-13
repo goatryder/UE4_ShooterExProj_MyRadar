@@ -102,19 +102,20 @@ struct FRadarHitMarkerData
 	uint32 CurrentIndex = 0;
 	
 	/**  */
-	FVector HitFromDirections[RADAR_HIT_MARKER_MAX];
+	FVector HitFromDirections[RADAR_HIT_MARKER_MAX] = {FVector::ZeroVector};
 	/**  */
-	float HitMarkerShowTimes[RADAR_HIT_MARKER_MAX];
+	float HitMarkerShowTimes[RADAR_HIT_MARKER_MAX] = {-1.0f};
 
 	/** */
 	void GetRelevantHitFromDirections(TArray<FVector> &OutHitFromDirections)
 	{
 		for (uint32 i = 0; i < RADAR_HIT_MARKER_MAX; i++)
 		{
-			if (HitMarkerShowTimes[i] != -1.0f)
+			if (HitMarkerShowTimes[i] == -1.0f || HitFromDirections[i] == FVector::ZeroVector)
 			{
-				OutHitFromDirections.Add(HitFromDirections[i]);
+				continue;
 			}
+			OutHitFromDirections.Add(HitFromDirections[i]);
 		}
 	}
 
