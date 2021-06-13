@@ -1,7 +1,8 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
-#include "ShooterGame.h"
 #include "UI/ShooterRadarCollector.h"
+
+#include "GameFramework/Actor.h"
 
 #include "Player/ShooterCharacter.h"
 #include "Pickups/ShooterPickup.h"
@@ -12,6 +13,8 @@ FRadarPoint RadarPointEnemyBase = { nullptr,  AShooterCharacter::StaticClass(), 
 
 UShooterRadarCollector::UShooterRadarCollector()
 {
+	RadarHitMarkerData = FRadarHitMarkerData();
+
 	if (this != StaticClass()->GetDefaultObject())  // if cdo, do not subs to delegate
 	{
 		// Subs delegates
@@ -20,7 +23,6 @@ UShooterRadarCollector::UShooterRadarCollector()
 		DelegateHandle_PickupPick =                   AShooterPickup::NotifyPickupPick.AddUObject(this, &UShooterRadarCollector::PickupPickEvent);
 		DelegateHandle_PickupRespawn =                AShooterPickup::NotifyPickupRespawn.AddUObject(this, &UShooterRadarCollector::PickupRespawnEvent);
 		DelegateHandle_CharacterWeaponShot =          AShooterWeapon::NotifyShooterCharacterWeaponShot.AddUObject(this, &UShooterRadarCollector::CharacterWeaponShotEvent);
-		// todo add subs Delegate character damaged (to display hit indicator on radar)
 	}
 }
 
@@ -157,6 +159,34 @@ void UShooterRadarCollector::CharacterWeaponShotEvent(AShooterCharacter* Charact
 	ShowEnemy(Character);
 }
 
+void UShooterRadarCollector::AddHitMarker(FVector HitFromDirection)
+{
+	RadarHitMarkerData.AddHitDirection(HitFromDirection);
+}
+
+void UShooterRadarCollector::TrackedCharacterTakePointDmgEvent(AActor* DamagedActor, float Damage, AController* InstigatedBy, 
+	FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, 
+	FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
+{
+	if (DamagedActor && DamagedActor == TrackedTakeDamageCharacter)
+	{
+		AddHitMarker(ShotFromDirection);
+
+		/*// Debug
+		if (GEngine)
+		{
+			FString HitMarkersDbgText;
+			for (FVector& HitMarker : RadarHitMarkerData.HitFromDirections)
+			{
+				HitMarkersDbgText.Append("  ");
+				HitMarkersDbgText.Append(HitMarker.ToString());
+			}
+			FString Msg = FString::Printf(TEXT("[HitMarkers] %s"), *HitMarkersDbgText);
+			GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, Msg);
+		}*/
+	}
+}
+
 void UShooterRadarCollector::UpdateRadarTick(float DeltaTime)
 {
 	// update enemies radar points
@@ -175,5 +205,17 @@ void UShooterRadarCollector::UpdateRadarTick(float DeltaTime)
 		{
 			Elem.Value.Update(DeltaTime);
 		}
+	}
+
+	// update radar hit markers
+	RadarHitMarkerData.Update(DeltaTime);
+}
+
+void UShooterRadarCollector::SetTrackedTakeDamageCharacter(AShooterCharacter* ShooterCharacter)
+{
+	if (ShooterCharacter)
+	{
+		ShooterCharacter->OnTakePointDamage.AddDynamic(this, &UShooterRadarCollector::TrackedCharacterTakePointDmgEvent);
+		TrackedTakeDamageCharacter = ShooterCharacter;
 	}
 }

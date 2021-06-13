@@ -115,6 +115,9 @@ AShooterHUD::AShooterHUD(const FObjectInitializer& ObjectInitializer) : Super(Ob
 void AShooterHUD::BeginPlay()
 {
 	Super::BeginPlay();
+
+	AShooterCharacter* MyPawn = CastChecked<AShooterCharacter>(GetOwningPawn());
+	RadarCollector->SetTrackedTakeDamageCharacter(MyPawn);
 }
 
 void AShooterHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -401,9 +404,34 @@ void AShooterHUD::DrawCanvasIconWithRot(FCanvasIcon& Icon, float X, float Y, flo
 	}
 }
 
-
-void AShooterHUD::DrawRadarHitIndicator()
+void AShooterHUD::DrawRadarHitIndicator(FVector TrackHitCharacterPos, FVector2D RadarCenter, float RadarRadius, float RadarRotRadians)
 {
+	
+	float SinTheta = sinf(RadarRotRadians);
+	float CosTheta = -cosf(RadarRotRadians);
+
+	TArray<FVector> InHitDirections;
+	RadarCollector->RadarHitMarkerData.GetRelevantHitFromDirections(InHitDirections);
+
+	for (FVector& HitDirection : InHitDirections)
+	{
+		FVector2D HitDirection2D = FVector2D(HitDirection);
+		HitDirection2D.Normalize();
+
+		// swap x and y to rotate to 90 deg angle
+		float BasicPointPosX =  -HitDirection2D.Y * RadarRadius;
+		float BasicPointPosY =  HitDirection2D.X * RadarRadius;
+
+		//float RadialOffsetX = RadarRadius * SinTheta;
+		//float RadialOffsetY = RadarRadius * CosTheta;
+
+		float PointPosX = RadarCenter.Y + BasicPointPosX;
+		float PointPosY = RadarCenter.X + BasicPointPosY;
+
+		DrawRect(FColor::Red, PointPosX - 2.0f, PointPosY - 2.0f, 4.0f, 4.0f);
+	}
+	
+	//DrawCanvasIconWithRot(RadarHitIcon, )
 
 }
 
@@ -536,6 +564,9 @@ void AShooterHUD::DrawRadar()
 	DrawRadarCollectorPoints(RadarCollector->Enemies, OwnedPawnLocation, RadarCenter, RadarRadius, AngleRad,
 		RadarEnemyIcon, FVector2D(-EnemyIconRadius), 
 		true, FVector2D(-HeightIconCenterOffsetX, -HeightIconCenterOffsetY));
+
+	// Draw Character Hit Direction Indicators
+	DrawRadarHitIndicator(OwnedPawnLocation, RadarCenter, RadarRadius, AngleRad);
 }
 
 void AShooterHUD::DrawMatchTimerAndPosition()

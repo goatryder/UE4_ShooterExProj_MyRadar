@@ -27,10 +27,6 @@ DECLARE_LOG_CATEGORY_EXTERN(LogShooterWeapon, Log, All);
 #define COLLISION_PROJECTILE	ECC_GameTraceChannel2
 #define COLLISION_PICKUP		ECC_GameTraceChannel3
 
-#define MAX_PLAYER_NAME_LENGTH 16
-
-#define RADAR_ENEMY_DISPLAY_TIME 1.0f
-
 #ifndef SHOOTER_CONSOLE_UI
 /** Set to 1 to pretend we're building for console even on a PC, for testing purposes */
 #define SHOOTER_SIMULATE_CONSOLE_UI	0

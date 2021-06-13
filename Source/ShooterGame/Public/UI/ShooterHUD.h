@@ -393,10 +393,16 @@ protected:
 	 */
 	void DrawCanvasIconWithRot(FCanvasIcon& Icon, float X, float Y, float Scale, FRotator Rotation, FVector2D Pivot);
 
-	/** Draw player hit direction indicator on radar circle */
-	void DrawRadarHitIndicator();
-
-	/** Draw RadarPoints Icons recieved from RadarCollector*/
+	/** 
+	 * Draw player hit direction indicator on radar circle recieved from RadarCollector 
+	 
+	 * @param	TrackHitCharacterPos	Tracking hit character world location.
+	 * @param	RadarCenter				RadarCenter on HUD Screen Space (should be scaled).
+	 * @param	RadarRadius				RadarCircleIcon Radius (should be scaled).
+	 * @param	RadarRotRadians			Radar Rotation from X World Axis
+	 *
+	 */
+	void DrawRadarHitIndicator(FVector TrackHitCharacterPos, FVector2D RadarCenter, float RadarRadius, float RadarRotRadians);
 
 	/**
 	 * Draw RadarPoints Icons recieved from RadarCollector.
