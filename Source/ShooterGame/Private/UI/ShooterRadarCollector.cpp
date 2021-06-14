@@ -140,12 +140,24 @@ int32 UShooterRadarCollector::GetActorRadarPointArrIndex(TArray<FRadarPoint>& Ra
 
 void UShooterRadarCollector::UpdateRadarPointArr(TArray<FRadarPoint>& RadarPointArr, float DeltaTime)
 {
-	for (int i = 0; i < RadarPointArr.Num(); i++)
+	/*for (int i = 0; i < RadarPointArr.Num(); i++)
 	{
 		FRadarPoint& RadarPoint = RadarPointArr[i];
 		if (RadarPoint.Actor == nullptr)
 		{
 			RadarPointArr.RemoveAt(i, 1, false);  // is this reason for crash?????
+		}
+		else
+		{
+			RadarPoint.Update(DeltaTime);
+		}
+	}*/
+
+	for (auto& RadarPoint : RadarPointArr)
+	{
+		if (RadarPoint.Actor == nullptr)
+		{
+			RadarPointArr.Remove(RadarPoint);
 		}
 		else
 		{

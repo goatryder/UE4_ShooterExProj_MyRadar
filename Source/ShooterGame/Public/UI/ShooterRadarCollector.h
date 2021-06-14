@@ -85,6 +85,8 @@ struct FRadarPoint
 		ShowTime = 0.0f; // reset time count
 		bCanShow = bShowOnRadar;
 	}
+
+	inline bool operator == (const FRadarPoint& Other) const { return Actor != nullptr && Actor == Other.Actor; }
 };
 
 /*
