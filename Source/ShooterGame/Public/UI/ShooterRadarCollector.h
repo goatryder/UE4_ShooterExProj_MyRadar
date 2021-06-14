@@ -22,10 +22,14 @@ class UPrimitiveComponent;
 /*
  * HUD radar actor point to display information container
  */
+USTRUCT()
 struct FRadarPoint
 {
+
+	GENERATED_BODY()
+
 	/** Actor to display on radar */
-	TWeakObjectPtr<AActor> Actor = nullptr;
+	AActor* Actor = nullptr;
 	/** Displayed actor class */
 	TSubclassOf<AActor> ActorClass;
 
@@ -50,11 +54,6 @@ struct FRadarPoint
 	/** Update RadarPoint Timer and handle logic on it */
 	void Update(float DeltaTime)
 	{
-		if (!Actor.IsValid())
-		{
-			return;
-		}
-
 		if (bCanUpdatePos)
 		{
 			// update last location
@@ -78,11 +77,6 @@ struct FRadarPoint
 	/** Handling Show/Hide Logic. Result is updated bCanShow param */
 	void Show(bool bShowOnRadar)
 	{
-		if (!Actor.IsValid())
-		{
-			return;
-		}
-
 		if (bShowOnRadar && bUpdatePosOnShowOnly)  // handle bUpdatePosOnShowOnly param
 		{
 			bCanUpdatePos = true;  // update pos gate open
@@ -163,10 +157,10 @@ public:
 	virtual void BeginDestroy() override final;
 
 	/** Enemies array */
-	TMap<TWeakObjectPtr<AActor>, FRadarPoint> Enemies;
+	TArray<FRadarPoint> Enemies;
 
 	/** Pickups array */
-	TMap<TWeakObjectPtr<AActor>, FRadarPoint> Pickups;
+	TArray<FRadarPoint> Pickups;
 
 	/** Radar hit marker data */
 	FRadarHitMarkerData RadarHitMarkerData;
@@ -184,6 +178,25 @@ protected:
 	void AddPickup(AShooterPickup* Pickup);
 	/** Hide pickup radar point*/
 	void RemovePickup(AShooterPickup* Pickup);
+	
+	/*
+	* Traverse RadarPointArr and try to get array index of RadarPoint with selected Actor value.
+	*
+	* @param RadarPointArr	RadarPoint array where to find if selected actor is in RadarPoint struct.
+	* @param Actor			Actor ptr to find in RadarPoint struct
+	*
+	* @returns				-1 if actor not found in any RadarPoint for selected array, 
+							or if actor is nullptr, else return RadarPoint index in array
+	*/
+	int32 GetActorRadarPointArrIndex(TArray<FRadarPoint> &RadarPointArr, AActor* Actor);
+
+	/*
+	* Call Update() for RadarPoint in array if RadarPoint.Actor != nullptr, else remove RadarPoint from array
+	*
+	* @param RadarPointArr	RadarPoint array where to call Update for each element
+	* @param DeltaTime		Time since last RadarPointArr update;
+	*/
+	void UpdateRadarPointArr(TArray<FRadarPoint>& RadarPointArr, float DeltaTime);
 
 	/** Add character to enemies map */
 	UFUNCTION()

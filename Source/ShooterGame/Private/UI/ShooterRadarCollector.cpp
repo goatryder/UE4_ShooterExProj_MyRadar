@@ -45,11 +45,12 @@ void UShooterRadarCollector::AddEnemy(AShooterCharacter* Enemy)
 		return;
 	}
 
-	if (!Enemies.Contains(Enemy))
+	int32 EnemyRadarPointIndex = GetActorRadarPointArrIndex(Enemies, Enemy);
+	if (EnemyRadarPointIndex == -1)
 	{
 		FRadarPoint Point = RadarPointEnemyBase;
 		Point.Actor = Enemy;
-		Enemies.Add(Enemy, Point);
+		Enemies.Add(Point);
 	}
 }
 
@@ -60,7 +61,11 @@ void UShooterRadarCollector::RemoveEnemy(AShooterCharacter* Enemy)
 		return;
 	}
 
-	Enemies.Remove(Enemy);
+	int32 EnemyRadarPointIndex = GetActorRadarPointArrIndex(Enemies, Enemy);
+	if (EnemyRadarPointIndex != -1)
+	{
+		Enemies.RemoveAt(EnemyRadarPointIndex);
+	}
 }
 
 void UShooterRadarCollector::ShowEnemy(AShooterCharacter* Enemy)
@@ -70,9 +75,10 @@ void UShooterRadarCollector::ShowEnemy(AShooterCharacter* Enemy)
 		return;
 	}
 
-	if (Enemies.Contains(Enemy))
+	int32 EnemyRadarPointIndex = GetActorRadarPointArrIndex(Enemies, Enemy);
+	if (EnemyRadarPointIndex != -1)
 	{
-		FRadarPoint& Point = Enemies[Enemy];
+		FRadarPoint& Point = Enemies[EnemyRadarPointIndex];
 		Point.Show(true);
 	}
 }
@@ -84,15 +90,19 @@ void UShooterRadarCollector::AddPickup(AShooterPickup* Pickup)
 		return;
 	}
 
-	if (!Pickups.Contains(Pickup))
+	int32 PickupRadarPointIndex = GetActorRadarPointArrIndex(Pickups, Pickup);
+	if (PickupRadarPointIndex == -1)
 	{
 		FRadarPoint Point = RadarPointPickupBase;
 		Point.Actor = Pickup;
-		Pickups.Add(Pickup, Point);
+		Pickups.Add(Point);
+		Point.Show(true);
 	}
-	
-	FRadarPoint& Point = Pickups[Pickup];
-	Point.Show(true);
+	else
+	{
+		FRadarPoint& Point = Pickups[PickupRadarPointIndex];
+		Point.Show(true);
+	}
 }
 
 void UShooterRadarCollector::RemovePickup(AShooterPickup* Pickup)
@@ -102,11 +112,48 @@ void UShooterRadarCollector::RemovePickup(AShooterPickup* Pickup)
 		return;
 	}
 
-	if (Pickups.Contains(Pickup))
+	int32 PickupRadarPointIndex = GetActorRadarPointArrIndex(Pickups, Pickup);
+	if (PickupRadarPointIndex != -1)
 	{
-		FRadarPoint& Point = Pickups[Pickup];
+		FRadarPoint& Point = Pickups[PickupRadarPointIndex];
 		Point.Show(false);
 	}
+}
+
+int32 UShooterRadarCollector::GetActorRadarPointArrIndex(TArray<FRadarPoint>& RadarPointArr, AActor* Actor)
+{
+	if (Actor == nullptr)
+	{
+		return -1;
+	}
+
+	for (int32 i = 0; i < RadarPointArr.Num(); i++)
+	{
+		if (RadarPointArr[i].Actor == Actor)
+		{
+			return i;
+		}
+	}
+	
+	return -1;
+}
+
+void UShooterRadarCollector::UpdateRadarPointArr(TArray<FRadarPoint>& RadarPointArr, float DeltaTime)
+{
+	for (int i = 0; i < RadarPointArr.Num(); i++)
+	{
+		FRadarPoint& RadarPoint = RadarPointArr[i];
+		if (RadarPoint.Actor == nullptr)
+		{
+			RadarPointArr.RemoveAt(i, 1, false);  // is this reason for crash?????
+		}
+		else
+		{
+			RadarPoint.Update(DeltaTime);
+		}
+	}
+
+	RadarPointArr.Shrink();
 }
 
 void UShooterRadarCollector::CharacterSpawnedEvent(AShooterCharacter* Character)
@@ -135,7 +182,7 @@ void UShooterRadarCollector::PickupPickEvent(AShooterPickup* Pickup)
 	{
 		return;
 	}
-
+ 
 	RemovePickup(Pickup);
 }
 
@@ -190,22 +237,9 @@ void UShooterRadarCollector::TrackedCharacterTakePointDmgEvent(AActor* DamagedAc
 void UShooterRadarCollector::UpdateRadarTick(float DeltaTime)
 {
 	// update enemies radar points
-	for (auto& Elem : Enemies)
-	{
-		if (Elem.Key.IsValid())
-		{
-			Elem.Value.Update(DeltaTime);
-		}
-	}
-
+	UpdateRadarPointArr(Enemies, DeltaTime);
 	// update pickups radar points
-	for (auto& Elem : Pickups)
-	{
-		if (Elem.Key.IsValid())
-		{
-			Elem.Value.Update(DeltaTime);
-		}
-	}
+	UpdateRadarPointArr(Pickups, DeltaTime);
 
 	// update radar hit markers
 	RadarHitMarkerData.Update(DeltaTime);

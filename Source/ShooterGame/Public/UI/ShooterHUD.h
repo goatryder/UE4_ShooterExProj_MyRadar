@@ -419,7 +419,7 @@ protected:
 	 * @param	bHeightIndOffsetUseNegY	If true then HeightIndicatorOffset.Y for "Lower" will be -(HightIndicatorOffset.Y)
 	 *                                  and for "Higher" will ramain HeightIndicatorOffset.Y
 	 */
-	void DrawRadarCollectorPoints(TMap<TWeakObjectPtr<AActor>, FRadarPoint> &RadarPoints, 
+	void DrawRadarCollectorPoints(TArray<FRadarPoint> &RadarPoints, 
 		FVector RadarWorldCenter, FVector2D RadarCenter, float RadarRadius, float RadarRotRadians,
 		FCanvasIcon &Icon, FVector2D IconOffset = FVector2D::ZeroVector,
 		bool bShowHeightIndicator = false, FVector2D HeightIndicatorOffset = FVector2D::ZeroVector, bool bHeightIndOffsetUseNegY = false);

@@ -436,7 +436,7 @@ void AShooterHUD::DrawRadarHitIndicator(FVector TrackHitCharacterPos, FVector2D 
 	}
 }
 
-void AShooterHUD::DrawRadarCollectorPoints(TMap<TWeakObjectPtr<AActor>, FRadarPoint>&RadarPoints,
+void AShooterHUD::DrawRadarCollectorPoints(TArray<FRadarPoint>&RadarPoints,
 	FVector RadarWorldCenter, FVector2D RadarCenter, float RadarRadius, float RadarRotRadians,
 	FCanvasIcon &Icon, FVector2D IconOffset,
 	bool bShowHeightIndicator, FVector2D HeightIndicatorOffset, bool bHeightIndOffsetUseNegY)
@@ -445,10 +445,8 @@ void AShooterHUD::DrawRadarCollectorPoints(TMap<TWeakObjectPtr<AActor>, FRadarPo
 	float CosTheta = -cosf(RadarRotRadians);
 
 	// Calc Points Icons Positions
-	for (auto& Pair : RadarPoints)
+	for (FRadarPoint& RadarPoint : RadarPoints)
 	{
-		FRadarPoint& RadarPoint = Pair.Value;
-
 		if (!RadarPoint.bCanShow)  // check FRadarPoint bCanShow param
 		{
 			continue;

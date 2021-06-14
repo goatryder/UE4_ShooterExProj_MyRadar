@@ -75,9 +75,11 @@ void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	// little delay-fix for bug when player respawn he will be shown or radar
+	// little delay-fix for bug when hud owned player respawn he will be shown or radar
 	// because his pawn will spawn -> then it will be possesed
 	// did it because i don't want to messing up with onPossses event and replication
+	// probably one frame delay will be enough for event fire after player controller possesing,
+	// but 1 sec is fine for us too
 	
 	FTimerDelegate TimerCallback;
 	TimerCallback.BindLambda([this] {
