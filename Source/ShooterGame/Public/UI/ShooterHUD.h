@@ -255,9 +255,17 @@ protected:
 	UPROPERTY()
 	FCanvasIcon RadarEnemyIcon;
 
-	/** Radar pickup icon. */
+	/** Radar pickup health icon. */
 	UPROPERTY()
-	FCanvasIcon RadarPickupIcon;
+	FCanvasIcon RadarHealthIcon;
+
+	/** Radar pickup ammo icon. */
+	UPROPERTY()
+	FCanvasIcon RadarAmmoIcon;
+
+	/** Radar pickup granede launcher ammo icon. */
+	UPROPERTY()
+	FCanvasIcon RadarGrenadesIcon;
 
 	/** Radar up icon fragment. */
 	UPROPERTY()
@@ -413,7 +421,6 @@ protected:
 	 * @param	RadarRadius				RadarCircleIcon Radius (should be scaled).
 	 * @param	RadarRotRadians			Radar Rotation from X World Axis
 	 * @param	Icon					RadarPoint Icon to draw.
-	 * @param	IconOffset				Icon point draw positive offset.
 	 * @param	bShowHeightIndicator	Draws "Higher", "Lower" icons on top of Icon when Points Z axis is higher then RadarIconHeightIndicatorTreshold
 	 * @param	HeightIndicatorOffset	"Higher", "Lower" icons positive offset
 	 * @param	bHeightIndOffsetUseNegY	If true then HeightIndicatorOffset.Y for "Lower" will be -(HightIndicatorOffset.Y)
@@ -421,13 +428,15 @@ protected:
 	 */
 	void DrawRadarCollectorPoints(TArray<FRadarPoint> &RadarPoints, 
 		FVector RadarWorldCenter, FVector2D RadarCenter, float RadarRadius, float RadarRotRadians,
-		FCanvasIcon &Icon, FVector2D IconOffset = FVector2D::ZeroVector,
-		bool bShowHeightIndicator = false, FVector2D HeightIndicatorOffset = FVector2D::ZeroVector, bool bHeightIndOffsetUseNegY = false);
+		FCanvasIcon &Icon, 
+		bool bShowHeightIndicator = false, FVector2D HeightIndicatorOffset = FVector2D::ZeroVector, 
+		bool bHeightIndOffsetUseNegY = false);
 
 	/** Draw Radar Circle, Radar North Icon, RadarPoints Icons, Radar Hit Direction Indicator */
 	void DrawRadar();
 
 	/** Class to recieve radar info from */
+	UPROPERTY()
 	class UShooterRadarCollector* RadarCollector;
 
 	/** Delegate for telling other methods when players have started/stopped talking */

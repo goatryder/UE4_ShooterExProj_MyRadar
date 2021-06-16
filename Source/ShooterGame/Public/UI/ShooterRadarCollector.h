@@ -25,13 +25,11 @@ class UPrimitiveComponent;
 USTRUCT()
 struct FRadarPoint
 {
-
 	GENERATED_BODY()
 
 	/** Actor to display on radar */
+	UPROPERTY()
 	AActor* Actor = nullptr;
-	/** Displayed actor class */
-	TSubclassOf<AActor> ActorClass;
 
 	/** Should HUD Radar draw this radar point on next draw call */
 	bool bCanShow = false;
@@ -40,8 +38,8 @@ struct FRadarPoint
 
 	/** Should displayed actor position update on ShowTime reset or every draw call */
 	bool bUpdatePosOnShowOnly = false;
-	/** Utility value to handle logic based on bUpdatePosOnTimerOnly */
-	bool bCanUpdatePos = true;
+	/** Flag value to handle logic based on bUpdatePosOnTimerOnly */
+	bool bPosUpdateIsBlocked = false;
 
 	/** Displayed actor last location */
 	FVector LastPos = FVector::ZeroVector;
@@ -51,58 +49,51 @@ struct FRadarPoint
 	/** Amount of time to draw radar point. If 0.0 it's will be draw permanently */
 	float ShowTimeMax = 0.0f;
 
-	/** Update RadarPoint Timer and handle logic on it */
-	void Update(float DeltaTime)
+	/** Check if RadarPoint is valid */
+	bool IsRadarPointValid()
 	{
-		if (bCanUpdatePos)
-		{
-			// update last location
-			LastPos = Actor->GetActorLocation();
-
-			if (bUpdatePosOnShowOnly)  // handle bUpdatePosOnShowOnly param
-			{
-				bCanUpdatePos = false;  // when bUpdatePosOnShowOnly=true pos will update only after Show() func call
-			}
-		}
-
-		// update show time
-		ShowTime += DeltaTime;
-		if (ShowTimeMax > 0.0f && ShowTime >= ShowTimeMax)
-		{
-			Show(false);
-			ShowTime = 0.0f;
-		}
+		return IsValid(Actor);
 	}
+
+	/*
+	 * Update RadarPoint Timer and handle logic on it 
+	 *
+	 * @param	DeltaTime	Time since last update
+	 * @return	if RadarPoint is valid and update success, false is RadarPoint is invalid and update fails
+	 */
+	bool Update(float DeltaTime);
 
 	/** Handling Show/Hide Logic. Result is updated bCanShow param */
 	void Show(bool bShowOnRadar)
 	{
 		if (bShowOnRadar && bUpdatePosOnShowOnly)  // handle bUpdatePosOnShowOnly param
 		{
-			bCanUpdatePos = true;  // update pos gate open
+			bPosUpdateIsBlocked = false;  // update pos gate open
 		}
 
 		ShowTime = 0.0f; // reset time count
 		bCanShow = bShowOnRadar;
 	}
-
-	inline bool operator == (const FRadarPoint& Other) const { return Actor != nullptr && Actor == Other.Actor; }
 };
 
 /*
- * 
+ * Struct to hold and provide information on radar about recent player hits recieved
  */
 struct FRadarHitMarkerData
 {
-	/**  */
-	uint32 CurrentIndex = 0;
+	/** current HitFromDirections/HitMarkerShowTimes index */
+	uint32 Index = 0;
 	
-	/**  */
+	/** array to store last N hit direction vectors */
 	FVector HitFromDirections[RADAR_HIT_MARKER_MAX] = {FVector::ZeroVector};
-	/**  */
+	/** array to store show time for last N hit direction vectors in HitFromDirections array */
 	float HitMarkerShowTimes[RADAR_HIT_MARKER_MAX] = {-1.0f};
 
-	/** */
+	/*
+	 *  Get valid hit directions we can draw (valid when time to show is not -1.0f) 
+	 *
+	 * @param	OutHitFromDirections	array to add relevant hit directions to
+	 */
 	void GetRelevantHitFromDirections(TArray<FVector> &OutHitFromDirections)
 	{
 		for (uint32 i = 0; i < RADAR_HIT_MARKER_MAX; i++)
@@ -115,16 +106,24 @@ struct FRadarHitMarkerData
 		}
 	}
 
-	/**  */
+	/*
+	 * Change hit direction vector for the very last updated hit direction array position 
+	 *
+	 * @param HitFromDirection	hit direction to add
+	 */
 	void AddHitDirection(FVector HitFromDirection)
 	{
-		HitFromDirections[CurrentIndex] = HitFromDirection;
-		HitMarkerShowTimes[CurrentIndex] = 0.0f;
+		HitFromDirections[Index] = HitFromDirection;
+		HitMarkerShowTimes[Index] = 0.0f;
 
-		CurrentIndex = (CurrentIndex + 1) % RADAR_HIT_MARKER_MAX;
+		Index = (Index + 1) % RADAR_HIT_MARKER_MAX;
 	}
 
-	/**  */
+	/* 
+	 * Calculate new HitMarkerShowTime for each hit direction in HitFromDirections array
+	 *
+	 * @param DeltaTime time since last RadarHitMarkerData update
+	 */
 	void Update(float DeltaTime)
 	{
 		for (float& HitMarkerShowTime : HitMarkerShowTimes)
@@ -159,10 +158,20 @@ public:
 	virtual void BeginDestroy() override final;
 
 	/** Enemies array */
+	UPROPERTY()
 	TArray<FRadarPoint> Enemies;
 
-	/** Pickups array */
-	TArray<FRadarPoint> Pickups;
+	/** Health pickups array */
+	UPROPERTY()
+	TArray<FRadarPoint> HealthPickups;
+
+	/** Ammo pickups array */
+	UPROPERTY()
+	TArray<FRadarPoint> AmmoPickups;
+
+	/** Grenade launcher ammo pickups array */
+	UPROPERTY()
+	TArray<FRadarPoint> GrenadesPickups;
 
 	/** Radar hit marker data */
 	FRadarHitMarkerData RadarHitMarkerData;
@@ -176,11 +185,13 @@ protected:
 	/** Call Show(true) for enemy radar point if found in Enemies map */
 	void ShowEnemy(AShooterCharacter* Enemy);
 
+	/** Get proper pickup array depends on Pickup actual final class */
+	TArray<FRadarPoint>* GetProperPickupArr(AShooterPickup* Pickup);
 	/** Show pickup radar point, add pickup to Pickups map if not found in map*/
 	void AddPickup(AShooterPickup* Pickup);
 	/** Hide pickup radar point*/
 	void RemovePickup(AShooterPickup* Pickup);
-	
+
 	/*
 	* Traverse RadarPointArr and try to get array index of RadarPoint with selected Actor value.
 	*
@@ -190,7 +201,7 @@ protected:
 	* @returns				-1 if actor not found in any RadarPoint for selected array, 
 							or if actor is nullptr, else return RadarPoint index in array
 	*/
-	int32 GetActorRadarPointArrIndex(TArray<FRadarPoint> &RadarPointArr, AActor* Actor);
+	const int32 GetActorRadarPointArrIndex(TArray<FRadarPoint> &RadarPointArr, AActor* Actor);
 
 	/*
 	* Call Update() for RadarPoint in array if RadarPoint.Actor != nullptr, else remove RadarPoint from array
