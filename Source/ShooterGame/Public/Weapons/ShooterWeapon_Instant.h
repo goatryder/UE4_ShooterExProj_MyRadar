@@ -158,6 +158,9 @@ protected:
 
 	/** spawn effects for impact */
 	void SpawnImpactEffects(const FHitResult& Impact);
+	
+	/** spawn physic tracer actor effect */
+	void SpawnTracerPhysic(const FHitResult& Impact);
 
 	/** spawn trail effect */
 	void SpawnTrailEffect(const FVector& EndPoint);

@@ -27,6 +27,9 @@ DECLARE_LOG_CATEGORY_EXTERN(LogShooterWeapon, Log, All);
 #define COLLISION_PROJECTILE	ECC_GameTraceChannel2
 #define COLLISION_PICKUP		ECC_GameTraceChannel3
 
+#define COLLISION_TRACER			ECC_EngineTraceChannel1
+#define TRACER_PROFILE_NAME			FName("Tracer")
+
 #ifndef SHOOTER_CONSOLE_UI
 /** Set to 1 to pretend we're building for console even on a PC, for testing purposes */
 #define SHOOTER_SIMULATE_CONSOLE_UI	0

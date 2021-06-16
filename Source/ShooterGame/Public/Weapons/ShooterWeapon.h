@@ -309,6 +309,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category=Effects)
 	UParticleSystem* MuzzleFX;
 
+	UPROPERTY(EditDefaultsOnly, Category = Effects)
+	TSubclassOf<class AShooterWeaponTracerPhysic> TracerPhysicClass;
+
 	/** spawned component for muzzle FX */
 	UPROPERTY(Transient)
 	UParticleSystemComponent* MuzzlePSC;
@@ -523,9 +526,6 @@ protected:
 	/** get the originating location for camera damage */
 	FVector GetCameraDamageStartLocation(const FVector& AimDir) const;
 
-	/** get the muzzle location of the weapon */
-	FVector GetMuzzleLocation() const;
-
 	/** get direction of weapon's muzzle */
 	FVector GetMuzzleDirection() const;
 
@@ -540,5 +540,8 @@ protected:
 
 public:
 	SHOOTERGAME_API static FOnShooterCharacterWeaponShot NotifyShooterCharacterWeaponShot;
+
+	/** get the muzzle location of the weapon */
+	FVector GetMuzzleLocation() const;
 };
 

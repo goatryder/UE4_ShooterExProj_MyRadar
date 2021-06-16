@@ -5,6 +5,8 @@
 #include "Particles/ParticleSystemComponent.h"
 #include "Effects/ShooterImpactEffect.h"
 
+#include "ShooterWeaponTracerPhysic.h"
+
 AShooterWeapon_Instant::AShooterWeapon_Instant(const FObjectInitializer& ObjectInitializer) : Super(ObjectInitializer)
 {
 	CurrentFiringSpread = 0.0f;
@@ -182,6 +184,7 @@ void AShooterWeapon_Instant::ProcessInstantHit_Confirmed(const FHitResult& Impac
 
 		SpawnTrailEffect(EndPoint);
 		SpawnImpactEffects(Impact);
+		SpawnTracerPhysic(Impact);
 	}
 }
 
@@ -258,6 +261,7 @@ void AShooterWeapon_Instant::SimulateInstantHit(const FVector& ShotOrigin, int32
 	{
 		SpawnImpactEffects(Impact);
 		SpawnTrailEffect(Impact.ImpactPoint);
+		SpawnTracerPhysic(Impact);
 	}
 	else
 	{
@@ -287,6 +291,14 @@ void AShooterWeapon_Instant::SpawnImpactEffects(const FHitResult& Impact)
 			EffectActor->SurfaceHit = UseImpact;
 			UGameplayStatics::FinishSpawningActor(EffectActor, SpawnTransform);
 		}
+	}
+}
+
+void AShooterWeapon_Instant::SpawnTracerPhysic(const FHitResult& Impact)
+{
+	if (TracerPhysicClass)
+	{
+		AShooterWeaponTracerPhysic::SpawnFromWeapon(this, TracerPhysicClass, Impact);
 	}
 }
 

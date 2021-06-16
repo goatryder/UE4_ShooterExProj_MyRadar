@@ -435,7 +435,7 @@ void AShooterHUD::DrawRadarHitIndicator(FVector TrackHitCharacterPos, FVector2D 
 		float IconOffsetX = RadarHitIcon.UL * 0.5f * ScaleUI;
 
 		DrawCanvasIconWithRot(RadarHitIcon, PointPosX - IconOffsetX, PointPosY, ScaleUI, FRotator(0.0f, HItMarkerRotDeg, 0.0f), FVector2D(0.5f, 0.0f));
-		//DrawRect(FColor::Magenta, PointPosX - 1.0f, PointPosY - 1.0f, 2.0f, 2.0f);
+		DrawRect(FColor::Magenta, PointPosX - 1.0f, PointPosY - 1.0f, 2.0f, 2.0f);
 	}
 }
 
@@ -498,7 +498,7 @@ void AShooterHUD::DrawRadarCollectorPoints(TArray<FRadarPoint>&RadarPoints,
 			Canvas->DrawIcon(RadarDownFragment, PointPosX + HeightIndicatorOffset.X, PointPosY + HeightIndicatorOffset.Y * OffsetMult, ScaleUI);
 		}
 
-		DrawRect(FColor::Red, PointPosX - 1.0f, PointPosY - 1.0f, 2.0f, 2.0f);
+		//DrawRect(FColor::Red, PointPosX - 1.0f, PointPosY - 1.0f, 2.0f, 2.0f);
 	}
 }
 

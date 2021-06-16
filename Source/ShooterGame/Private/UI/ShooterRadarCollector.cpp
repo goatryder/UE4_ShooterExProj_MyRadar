@@ -220,7 +220,8 @@ void UShooterRadarCollector::UpdateRadarPointArr(TArray<FRadarPoint>& RadarPoint
 
 void UShooterRadarCollector::CharacterSpawnedEvent(AShooterCharacter* Character)
 {
-	if (Character == nullptr || (Character->IsLocallyControlled() && Character->IsPlayerControlled()))
+	if (Character == nullptr 
+		|| Character == TrackedTakeDamageCharacter)
 	{
 		return;
 	}
@@ -277,6 +278,9 @@ void UShooterRadarCollector::TrackedCharacterTakePointDmgEvent(AActor* DamagedAc
 	FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, 
 	FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
 {
+	if (GEngine)
+		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("TrackedCharacterTakePointDamageEvent"));
+
 	if (DamagedActor && DamagedActor == TrackedTakeDamageCharacter)
 	{
 		AddHitMarker(ShotFromDirection);
