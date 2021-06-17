@@ -255,6 +255,8 @@ protected:
 	/* Flag to prevent duplicate input bindings when using the same player controller for multiple maps */
 	bool bHasInitializedInputComponent;
 
+	virtual void OnPossess(APawn* PossessedPawn) override;
+
 public:
 	virtual void TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction) override;
 	//End AActor interface

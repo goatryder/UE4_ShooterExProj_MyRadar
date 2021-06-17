@@ -221,7 +221,7 @@ void UShooterRadarCollector::UpdateRadarPointArr(TArray<FRadarPoint>& RadarPoint
 void UShooterRadarCollector::CharacterSpawnedEvent(AShooterCharacter* Character)
 {
 	if (Character == nullptr 
-		|| Character == TrackedTakeDamageCharacter)
+		|| Character == TrackedCharacter)
 	{
 		return;
 	}
@@ -265,7 +265,7 @@ void UShooterRadarCollector::CharacterWeaponShotEvent(AShooterCharacter* Charact
 	{
 		return;
 	}
-
+	
 	ShowEnemy(Character);
 }
 
@@ -278,10 +278,7 @@ void UShooterRadarCollector::TrackedCharacterTakePointDmgEvent(AActor* DamagedAc
 	FVector HitLocation, UPrimitiveComponent* FHitComponent, FName BoneName, 
 	FVector ShotFromDirection, const UDamageType* DamageType, AActor* DamageCauser)
 {
-	if (GEngine)
-		GEngine->AddOnScreenDebugMessage(-1, 3.0f, FColor::Red, TEXT("TrackedCharacterTakePointDamageEvent"));
-
-	if (DamagedActor && DamagedActor == TrackedTakeDamageCharacter)
+	if (DamagedActor && DamagedActor == TrackedCharacter)
 	{
 		AddHitMarker(ShotFromDirection);
 	}
@@ -299,11 +296,11 @@ void UShooterRadarCollector::UpdateRadarTick(float DeltaTime)
 	RadarHitMarkerData.Update(DeltaTime);     // update radar hit markers
 }
 
-void UShooterRadarCollector::SetTrackedTakeDamageCharacter(AShooterCharacter* ShooterCharacter)
+void UShooterRadarCollector::SetTrackedCharacter(AShooterCharacter* ShooterCharacter)
 {
 	if (ShooterCharacter)
 	{
 		ShooterCharacter->OnTakePointDamage.AddDynamic(this, &UShooterRadarCollector::TrackedCharacterTakePointDmgEvent);
-		TrackedTakeDamageCharacter = ShooterCharacter;
+		TrackedCharacter = ShooterCharacter;
 	}
 }

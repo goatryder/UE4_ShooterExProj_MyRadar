@@ -232,7 +232,7 @@ protected:
 		void CharacterWeaponShotEvent(AShooterCharacter* Character, AShooterWeapon* Weapon);
 
 	/** Character to detect hits from to provide radar hit marker info */
-	AShooterCharacter* TrackedTakeDamageCharacter;
+	AShooterCharacter* TrackedCharacter;
 	
 	/**  */
 	void AddHitMarker(FVector HitFromDirection);
@@ -246,7 +246,7 @@ public:
 	void UpdateRadarTick(float DeltaTime);
 	
 	/**  */
-	void SetTrackedTakeDamageCharacter(AShooterCharacter* ShooterCharacter);
+	void SetTrackedCharacter(AShooterCharacter* ShooterCharacter);
 
 private:
 	FDelegateHandle DelegateHandle_CharacterSpawn;

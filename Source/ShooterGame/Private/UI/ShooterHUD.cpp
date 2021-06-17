@@ -119,8 +119,8 @@ void AShooterHUD::BeginPlay()
 {
 	Super::BeginPlay();
 
-	AShooterCharacter* MyPawn = CastChecked<AShooterCharacter>(GetOwningPawn());
-	RadarCollector->SetTrackedTakeDamageCharacter(MyPawn);
+	AShooterCharacter* Character = Cast<AShooterCharacter>(GetOwningPawn());
+	RadarCollectorChangeTrackedCharacter(Character);
 }
 
 void AShooterHUD::EndPlay(const EEndPlayReason::Type EndPlayReason)
@@ -156,6 +156,16 @@ FString AShooterHUD::GetTimeString(float TimeSeconds)
 
 	const FString TimeDesc = FString::Printf(TEXT("%02d:%02d"), NumMinutes, NumSeconds);
 	return TimeDesc;
+}
+
+void AShooterHUD::RadarCollectorChangeTrackedCharacter(AShooterCharacter* Character)
+{
+	if (RadarCollector == nullptr)
+	{
+		return;
+	}
+
+	RadarCollector->SetTrackedCharacter(Character);
 }
 
 void AShooterHUD::DrawWeaponHUD()

@@ -150,6 +150,9 @@ public:
 
 	/* Is the match over (IE Is the state Won or Lost). */
 	bool IsMatchOver() const;
+
+	/** On player controller possesed pawn change, change tracking character for radar collector */
+	void RadarCollectorChangeTrackedCharacter(AShooterCharacter* Character);
 		
 protected:
 	/** Floor for automatic hud scaling. */

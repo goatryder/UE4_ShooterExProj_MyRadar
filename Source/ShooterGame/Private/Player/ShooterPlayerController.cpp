@@ -115,6 +115,18 @@ void AShooterPlayerController::ClearLeaderboardDelegate()
 	}
 }
 
+void AShooterPlayerController::OnPossess(APawn* PossessedPawn)
+{
+	Super::OnPossess(PossessedPawn);
+
+	AShooterHUD* ShooterHUD = GetShooterHUD();
+	if (ShooterHUD)
+	{
+		AShooterCharacter* ShooterCharacter = Cast<AShooterCharacter>(PossessedPawn);
+		ShooterHUD->RadarCollectorChangeTrackedCharacter(ShooterCharacter);
+	}
+}
+
 void AShooterPlayerController::TickActor(float DeltaTime, enum ELevelTick TickType, FActorTickFunction& ThisTickFunction)
 {
 	Super::TickActor(DeltaTime, TickType, ThisTickFunction);
